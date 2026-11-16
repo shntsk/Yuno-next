@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Configurações › Aparência › Taxa de atualização (Settings.kt, RefreshRate.kt). -->
+<resources>
+    <string name="settings_refresh_rate">Taxa de atualização</string>
+    <string name="settings_refresh_rate_line">Auto deixa o Android escolher. Fixe uma taxa para economizar bateria ou ter movimento mais fluido.</string>
+    <string name="settings_refresh_rate_auto">Auto</string>
+    <string name="settings_refresh_rate_hz">%1$d Hz</string>
+</resources>
