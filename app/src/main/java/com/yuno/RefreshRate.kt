@@ -101,19 +101,14 @@ object RefreshRateSetting {
         val window = activity.window ?: return
         val fixed = selected
         val mode = if (fixed == Auto) null else modeFor(display, fixed)
-        val modeId = mode?.modeId ?: 0
         // 0 = no preference: that is Auto.
-        val rate = if (mode != null) fixed.toFloat() else 0f
+        val modeId = mode?.modeId ?: 0
         val lp = window.attributes
-        val rangeSet = Build.VERSION.SDK_INT < Build.VERSION_CODES.R ||
-            (lp.preferredMinDisplayRefreshRate == rate && lp.preferredMaxDisplayRefreshRate == rate)
         // Nothing to change: don't make the window lay out again for it.
-        if (lp.preferredDisplayModeId == modeId && rangeSet) return
+        if (lp.preferredDisplayModeId == modeId) return
+        // preferredDisplayModeId is public API; the min/max refresh-rate range fields are hidden
+        // in the SDK (they fail to compile), and the exact mode id already pins the rate.
         lp.preferredDisplayModeId = modeId
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            lp.preferredMinDisplayRefreshRate = rate
-            lp.preferredMaxDisplayRefreshRate = rate
-        }
         window.attributes = lp
     }
 
