@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_refresh_rate">रिफ्रेश रेट</string>
+    <string name="settings_refresh_rate_line">ऑटो में Android खुद चुनता है। बैटरी बचाने या ज़्यादा स्मूद मोशन के लिए कोई रेट तय करें।</string>
+    <string name="settings_refresh_rate_auto">ऑटो</string>
+    <string name="settings_refresh_rate_hz">%1$d Hz</string>
+</resources>
