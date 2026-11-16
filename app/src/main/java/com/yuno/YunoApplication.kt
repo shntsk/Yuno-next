@@ -24,6 +24,8 @@ class YunoApplication : Application(), ImageLoaderFactory {
         org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeStreamExtractor.setFetchIosClient(false)
         ThemeSettings.init(this)
         LiquidGlassSetting.init(this)
+        // Settings › Appearance › Refresh rate: applies to each window as it comes up.
+        RefreshRateSetting.init(this)
         Onboarding.init(this)
         QualityPreference.init(this)
         PlaybackSpeed.init(this)

@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.FormatListBulleted
+import androidx.compose.material.icons.rounded.Animation
 import androidx.compose.material.icons.rounded.BugReport
 import androidx.compose.material.icons.rounded.ClosedCaption
 import androidx.compose.material.icons.rounded.Code
@@ -75,7 +76,8 @@ import kotlinx.coroutines.withContext
  * while it is held) and a short list of choices is their sliding pill.
  *
  * What the rows set is Yuno's: playback, captions, SponsorBlock, Shorts, appearance
- * (System, Light, Dark, and liquid glass), language, notifications, about, account.
+ * (System, Light, Dark, liquid glass, and the screen's refresh rate), language,
+ * notifications, about, account.
  */
 enum class SettingsPage(@StringRes val titleRes: Int, val icon: ImageVector) {
     Playback(R.string.settings_playback, SfIcons.PlayCircle),
@@ -436,6 +438,24 @@ private fun AppearanceBody(search: SettingsSearch) {
                 ToggleRow(SfIcons.Appearance, glassTitle, glassLine, LiquidGlassSetting.enabled, onCheckedChange = LiquidGlassSetting::set)
             }
         }
+        // Only on a screen that can run more than one rate. Auto = Android chooses; the others are
+        // exactly the rates this screen offers (60 / 120 on a 120 Hz panel, 60 / 90 on a 90 Hz one).
+        if (RefreshRateSetting.available) {
+            val rateTitle = stringResource(R.string.settings_refresh_rate)
+            val rateLine = stringResource(R.string.settings_refresh_rate_line)
+            val autoLabel = stringResource(R.string.settings_refresh_rate_auto)
+            row(rateTitle, rateLine, autoLabel, "hz", "fps", "smooth", "120", "90", "60") {
+                val rates = RefreshRateSetting.rates
+                val picked = RefreshRateSetting.selected
+                ChoiceRow(
+                    Icons.Rounded.Animation,
+                    rateTitle,
+                    rateLine,
+                    listOf(autoLabel) + rates.map { stringResource(R.string.settings_refresh_rate_hz, it) },
+                    if (picked == RefreshRateSetting.Auto) 0 else (rates.indexOf(picked) + 1).coerceAtLeast(0),
+                ) { RefreshRateSetting.choose(rates.getOrNull(it - 1) ?: RefreshRateSetting.Auto) }
+            }
+        }
     }
 }
 
@@ -664,4 +684,3 @@ private tailrec fun android.content.Context.findActivity(): android.app.Activity
     is android.content.ContextWrapper -> baseContext.findActivity()
     else -> null
 }
-
