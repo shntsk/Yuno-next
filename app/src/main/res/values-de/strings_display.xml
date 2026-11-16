@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_refresh_rate">Bildwiederholrate</string>
+    <string name="settings_refresh_rate_line">Auto überlässt die Wahl Android. Lege eine Rate fest, um Akku zu sparen oder für flüssigere Bewegungen.</string>
+    <string name="settings_refresh_rate_auto">Auto</string>
+    <string name="settings_refresh_rate_hz">%1$d Hz</string>
+</resources>
