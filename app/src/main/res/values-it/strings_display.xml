@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_refresh_rate">Frequenza di aggiornamento</string>
+    <string name="settings_refresh_rate_line">Auto lascia scegliere ad Android. Imposta una frequenza fissa per risparmiare batteria o per un movimento più fluido.</string>
+    <string name="settings_refresh_rate_auto">Auto</string>
+    <string name="settings_refresh_rate_hz">%1$d Hz</string>
+</resources>
