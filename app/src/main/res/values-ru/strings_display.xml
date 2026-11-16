@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_refresh_rate">Частота обновления</string>
+    <string name="settings_refresh_rate_line">«Авто» — выбор остаётся за Android. Зафиксируйте частоту, чтобы сэкономить заряд или получить более плавное движение.</string>
+    <string name="settings_refresh_rate_auto">Авто</string>
+    <string name="settings_refresh_rate_hz">%1$d Hz</string>
+</resources>
