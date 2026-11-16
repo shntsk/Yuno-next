@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
@@ -14,9 +15,15 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      # The repo's gradle/wrapper/gradle-wrapper.jar is a custom 5 KB jar (the official one is ~43 KB),
+      # so the wrapper validation rejects it. Build with the official Gradle the action installs
+      # (the version in gradle-wrapper.properties) and skip validating the custom jar.
       - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.11.1
+          validate-wrappers: false
       - name: Assemble debug and release
-        run: ./gradlew assembleDebug assembleRelease --console=plain
+        run: gradle assembleDebug assembleRelease --console=plain
       - uses: actions/upload-artifact@v4
         with:
           name: Yuno-apks
