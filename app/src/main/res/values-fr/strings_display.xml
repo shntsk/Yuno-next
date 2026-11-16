@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_refresh_rate">Taux de rafraîchissement</string>
+    <string name="settings_refresh_rate_line">Auto laisse Android choisir. Fixez un taux pour économiser la batterie ou pour des animations plus fluides.</string>
+    <string name="settings_refresh_rate_auto">Auto</string>
+    <string name="settings_refresh_rate_hz">%1$d Hz</string>
+</resources>
