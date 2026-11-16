@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_refresh_rate">Kecepatan refresh</string>
+    <string name="settings_refresh_rate_line">Auto membiarkan Android memilih. Tetapkan satu kecepatan untuk menghemat baterai atau gerakan yang lebih mulus.</string>
+    <string name="settings_refresh_rate_auto">Otomatis</string>
+    <string name="settings_refresh_rate_hz">%1$d Hz</string>
+</resources>
