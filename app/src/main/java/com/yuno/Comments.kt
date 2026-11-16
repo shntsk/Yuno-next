@@ -1,4 +1,4 @@
-﻿package com.yuno
+package com.yuno
 
 import android.util.Log
 
@@ -28,6 +28,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.Velocity
@@ -103,6 +104,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 /** Comments for the open video: first page, paging, per-comment replies, likes and posting. */
 @Stable
@@ -217,10 +219,18 @@ class CommentsState(private val scope: CoroutineScope) {
         }
     }
 
-    /** New comments in: their liked state, and their authors' real names (looked up once each). */
+    /**
+     * New comments in: their liked state. Authors' real names are no longer fetched here for the
+     * whole page: each row asks for its own once it is on screen ([resolveName]), so opening the
+     * panel doesn't fire a request per comment.
+     */
     private fun arrived(page: List<Comment>) {
         page.forEach { if (it.liked) liked[it.id] = true }
-        ChannelNames.resolve(scope, page.mapNotNullTo(LinkedHashSet()) { it.channelId })
+    }
+
+    /** A visible row asks for its author's real name; looked up once per channel (see [ChannelNames]). */
+    fun resolveName(channelId: String) {
+        ChannelNames.resolve(scope, listOf(channelId))
     }
 
     fun hideReplies(comment: Comment) {
@@ -462,7 +472,13 @@ fun PlayerPanel(
             Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .height(with(density) { height.value.toDp() })
+                // The height is read in the layout phase (not in composition): every frame of a drag
+                // or spring re-measures the panel without recomposing it and its whole list.
+                .layout { measurable, constraints ->
+                    val h = height.value.roundToInt().coerceIn(0, constraints.maxHeight)
+                    val placeable = measurable.measure(constraints.copy(minHeight = h, maxHeight = h))
+                    layout(placeable.width, h) { placeable.place(0, 0) }
+                }
                 .graphicsLayer { translationY = slide.value * size.height }
                 .shadow(16.dp, shape, ambientColor = Color.Black.copy(alpha = 0.18f), spotColor = Color.Black.copy(alpha = 0.22f))
                 .clip(shape)
@@ -601,13 +617,22 @@ private fun Composer(state: CommentsState) {
 @Composable
 private fun CommentRow(comment: Comment, state: CommentsState, isReply: Boolean = false) {
     val c = MaterialTheme.colorScheme
+    // The author's real name comes from a session-wide map that fills in as lookups finish. Reading
+    // it through derivedStateOf means this row recomposes only when *its own* name changes, not
+    // every time any other row's name arrives.
+    val displayName by remember(comment) { derivedStateOf { comment.displayName() } }
+    // Ask for the real name only now that the row is on screen (once per channel, see ChannelNames).
+    LaunchedEffect(comment.channelId, comment.name) {
+        val channelId = comment.channelId
+        if (channelId != null && comment.name == null) state.resolveName(channelId)
+    }
     Row(Modifier.fillMaxWidth().padding(start = if (isReply) 62.dp else 20.dp, end = 20.dp, top = 10.dp, bottom = 6.dp)) {
         ChannelAvatar(comment.avatar, comment.author, size = if (isReply) 28 else 36)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (comment.pinned) Icon(Icons.Rounded.PushPin, stringResource(R.string.comments_pinned), tint = c.onSurfaceVariant, modifier = Modifier.size(14.dp))
-                Text(comment.displayName(), fontWeight = FontWeight.Bold, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                Text(displayName, fontWeight = FontWeight.Bold, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                 displayAge(comment.ago)?.let { Text(it, color = c.onSurfaceVariant, fontSize = 12.sp, maxLines = 1) }
             }
             Spacer(Modifier.height(3.dp))

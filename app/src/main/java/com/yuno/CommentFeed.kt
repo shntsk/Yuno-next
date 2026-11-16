@@ -168,6 +168,11 @@ object CommentFeed {
  * read from the top of the channel's public feed: the `<title>` is in the first few hundred
  * bytes and the rest is never downloaded (~1 KB per person). Cached for the session; at most
  * four lookups at a time.
+ *
+ * Lookups are now asked for by each comment row once it is on screen (see CommentsState.resolveName),
+ * not for a whole page at once, so rows scrolled past quickly may be asked for after they are gone.
+ * The permit wait sits inside the runCatching below, so a cancelled lookup frees its id to be asked
+ * for again instead of staying marked as "already asked" with no name.
  */
 object ChannelNames {
     /** channelId → display name, for the UI. */
@@ -180,11 +185,13 @@ object ChannelNames {
 
     /** Looks up the names not known yet; [known] fills in as they arrive. Call on the main thread. */
     fun resolve(scope: CoroutineScope, channelIds: Collection<String>) {
-        channelIds.filter { asked.add(it) }.forEach { id ->
+        channelIds.filter { it !in known && asked.add(it) }.forEach { id ->
             scope.launch {
-                val name = gate.withPermit { withContext(Dispatchers.IO) { runCatching { fetch(id) } } }
+                val name = runCatching {
+                    gate.withPermit { withContext(Dispatchers.IO) { fetch(id) } }
+                }
                 name.onSuccess { if (it != null) known[id] = it }
-                    // A network failure may pass; let a later page ask again.
+                    // A network failure (or a cancelled wait) may pass; let a later ask try again.
                     .onFailure { asked.remove(id) }
             }
         }
