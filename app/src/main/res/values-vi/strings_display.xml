@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_refresh_rate">Tốc độ làm mới</string>
+    <string name="settings_refresh_rate_line">Tự động để Android chọn. Cố định một tốc độ để tiết kiệm pin hoặc để chuyển động mượt hơn.</string>
+    <string name="settings_refresh_rate_auto">Tự động</string>
+    <string name="settings_refresh_rate_hz">%1$d Hz</string>
+</resources>
