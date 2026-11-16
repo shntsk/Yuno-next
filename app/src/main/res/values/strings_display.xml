@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Settings › Appearance › Refresh rate (Settings.kt, RefreshRate.kt). -->
+<resources>
+    <string name="settings_refresh_rate">Refresh rate</string>
+    <string name="settings_refresh_rate_line">Auto lets Android choose. Fix a rate to save battery or for smoother motion.</string>
+    <!-- The first choice: the system decides. Short. -->
+    <string name="settings_refresh_rate_auto">Auto</string>
+    <!-- A fixed rate the screen offers; %1$d = 60, 90, 120… -->
+    <string name="settings_refresh_rate_hz">%1$d Hz</string>
+</resources>
