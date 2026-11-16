@@ -167,8 +167,9 @@ fun VideoContent(
     BackHandler(enabled = drop != null) { drop = null }
     var touchedAt by remember { mutableLongStateOf(0L) }
     fun touched() { touchedAt = System.nanoTime() }
-    LaunchedEffect(controlsVisible, state.isPlaying, touchedAt) {
-        if (controlsVisible && state.isPlaying) {
+    // Not while a speed/quality/captions card or a sheet is open: the timer starts again once it closes.
+    LaunchedEffect(controlsVisible, state.isPlaying, touchedAt, drop, state.sheet) {
+        if (controlsVisible && state.isPlaying && drop == null && state.sheet == null) {
             delay(Motion.ControlsHideMs)
             controlsVisible = false
         }
@@ -176,7 +177,7 @@ fun VideoContent(
     val reduced = rememberReducedMotion()
     val visibleAlphaState = animateFloatAsState(
         targetValue = if (controlsVisible) 1f else 0f,
-        animationSpec = if (reduced) tween(0) else tween(160, easing = Motion.Emphasized),
+        animationSpec = if (reduced) tween(0) else if (controlsVisible) tween(220, easing = Motion.Emphasized) else tween(320, easing = Motion.Emphasized),
         label = "controlsAlpha",
     )
 
@@ -538,7 +539,8 @@ fun VideoContent(
             }
             Box(Modifier.fillMaxSize().then(inset).onGloballyPositioned { dropAnchors[0] = it }) {
                 Row(
-                    Modifier.align(Alignment.TopStart).fillMaxWidth().padding(10.dp),
+                    Modifier.align(Alignment.TopStart).fillMaxWidth().padding(10.dp)
+                        .graphicsLayer { translationY = -(1f - visibleAlphaState.value) * 10.dp.toPx() },
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -595,7 +597,8 @@ fun VideoContent(
                 }
                 val seek = if (fullscreen) 60.dp else 51.dp
                 Row(
-                    modifier = Modifier.align(Alignment.Center),
+                    modifier = Modifier.align(Alignment.Center)
+                        .graphicsLayer { val k = 0.88f + 0.12f * visibleAlphaState.value; scaleX = k; scaleY = k },
                     horizontalArrangement = Arrangement.spacedBy(if (fullscreen) 32.dp else 18.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -614,7 +617,8 @@ fun VideoContent(
                             start = 14.dp,
                             end = 8.dp,
                             bottom = EdgeScrubTimeRowBottomPad + if (fullscreenControlsScrub) FullscreenControlsLift else 0.dp,
-                        ),
+                        )
+                        .graphicsLayer { translationY = (1f - visibleAlphaState.value) * 10.dp.toPx() },
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         TimeLabel(state, Modifier.weight(1f))
