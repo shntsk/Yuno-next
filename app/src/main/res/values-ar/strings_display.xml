@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_refresh_rate">معدل التحديث</string>
+    <string name="settings_refresh_rate_line">يترك «تلقائي» الاختيار لنظام Android. ثبّت معدلاً لتوفير البطارية أو للحصول على حركة أكثر سلاسة.</string>
+    <string name="settings_refresh_rate_auto">تلقائي</string>
+    <string name="settings_refresh_rate_hz">%1$d Hz</string>
+</resources>
