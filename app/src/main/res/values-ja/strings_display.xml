@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_refresh_rate">リフレッシュレート</string>
+    <string name="settings_refresh_rate_line">「自動」ではAndroidが選びます。バッテリーを節約したいときや、より滑らかな動きにしたいときは固定してください。</string>
+    <string name="settings_refresh_rate_auto">自動</string>
+    <string name="settings_refresh_rate_hz">%1$d Hz</string>
+</resources>
