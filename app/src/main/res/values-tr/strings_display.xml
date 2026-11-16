@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_refresh_rate">Yenileme hızı</string>
+    <string name="settings_refresh_rate_line">Otomatik, seçimi Android sistemine bırakır. Pil tasarrufu veya daha akıcı hareket için sabit bir hız seçin.</string>
+    <string name="settings_refresh_rate_auto">Otomatik</string>
+    <string name="settings_refresh_rate_hz">%1$d Hz</string>
+</resources>
