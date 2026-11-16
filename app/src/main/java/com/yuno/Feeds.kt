@@ -336,14 +336,14 @@ fun LazyListScope.videoCards(
     /** A card of its own in the grid's second spot (Home's Shorts card); grids only. */
     extra: (@Composable (Modifier) -> Unit)? = null,
 ) {
-    val videos = videos.filterNot(Dismissed::hides)
+    val videos = if (videos.any(Dismissed::hides)) videos.filterNot(Dismissed::hides) else videos
     if (columns <= 1) {
-        items(videos, key = { it.id }) { video -> VideoCard(video, onClick = { onOpen(video) }) }
+        items(videos, key = { it.id }, contentType = { "video" }) { video -> VideoCard(video, onClick = { onOpen(video) }) }
         return
     }
     val cells: List<Any> = if (extra != null && videos.isNotEmpty()) videos.take(1) + ExtraCell + videos.drop(1) else videos
     // A row keeps its first video's key (always a video), so rows already shown stay put as more load.
-    items(cells.chunked(columns), key = { row -> "row-" + (row.first() as VideoItem).id }) { row ->
+    items(cells.chunked(columns), key = { row -> "row-" + (row.first() as VideoItem).id }, contentType = { "row" }) { row ->
         Row(Modifier.fillMaxWidth().padding(horizontal = 5.dp)) {
             row.forEach { cell ->
                 if (cell is VideoItem) VideoCard(cell, onClick = { onOpen(cell) }, modifier = Modifier.weight(1f))
@@ -423,7 +423,7 @@ fun FeedList(
         when {
             // No keys on these trailing items: a keyed loader at index 0 makes LazyColumn
             // hold it in view when videos arrive above it, landing at the bottom of the page.
-            feed.error != null && listVideos.isEmpty() -> item {
+            feed.error != null && listVideos.isEmpty() -> item(contentType = "empty") {
                 EmptyState(
                     icon = Icons.Rounded.CloudOff,
                     title = stringResource(R.string.ui_feed_error_title),
@@ -433,8 +433,8 @@ fun FeedList(
             }
             // One item per card, so a scroll through the placeholders stays at that spot
             // when the videos take their place. One tall item would clamp back to the top.
-            feed.loading && listVideos.isEmpty() -> items(4) { FeedSkeletons(1) }
-            feed.loading || feed.hasMore -> item { FeedSkeletons(1) }
+            feed.loading && listVideos.isEmpty() -> items(4, contentType = { "skeleton" }) { FeedSkeletons(1) }
+            feed.loading || feed.hasMore -> item(contentType = "skeleton") { FeedSkeletons(1) }
         }
     }
     }

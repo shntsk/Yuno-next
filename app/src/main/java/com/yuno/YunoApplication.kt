@@ -1,10 +1,12 @@
 package com.yuno
 
+import android.app.ActivityManager
 import android.app.Application
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.memory.MemoryCache
 import org.schabi.newpipe.extractor.NewPipe
+import kotlin.concurrent.thread
 
 class YunoApplication : Application(), ImageLoaderFactory {
 
@@ -38,7 +40,9 @@ class YunoApplication : Application(), ImageLoaderFactory {
         SavedSession.init(this)
         Account.init(this)
         Bells.init(this)
-        NewVideos.schedule(this)
+        // WorkManager's first use opens its database; nothing on screen waits for the schedule,
+        // so it leaves the main thread (after Bells.init, which it may read).
+        thread(name = "yuno-schedule") { NewVideos.schedule(this) }
         SponsorBlock.init(this)
         ShortsSetting.init(this)
         ShortsBank.init(this)
@@ -56,8 +60,14 @@ class YunoApplication : Application(), ImageLoaderFactory {
     }
 
     // Thumbnails are in every list and the player; a short crossfade replaces pop-in.
-    override fun newImageLoader(): ImageLoader = ImageLoader.Builder(this)
-        .crossfade(180)
-        .memoryCache { MemoryCache.Builder(this).maxSizePercent(0.25).build() }
-        .build()
+    // The cache is a quarter of the NORMAL memory class: with largeHeap on, Coil's own percentage
+    // is taken of the (much bigger) large class and the cache grows to well over 100 MB.
+    override fun newImageLoader(): ImageLoader {
+        val memoryClassMb = getSystemService(ActivityManager::class.java).memoryClass
+        val cacheBytes = (memoryClassMb * 1024L * 1024L / 4).toInt()
+        return ImageLoader.Builder(this)
+            .crossfade(180)
+            .memoryCache { MemoryCache.Builder(this).maxSizeBytes(cacheBytes).build() }
+            .build()
+    }
 }

@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
@@ -51,13 +52,20 @@ internal val GLASS_EDGE_WIDTH = 0.5.dp
 internal val GLASS_EDGE_COLOR = Color.White.copy(alpha = 0.10f)
 private const val DARK_INDICATOR_OPACITY = 0.14f
 
+/** Light or dark surface, worked out once per surface colour instead of on every recomposition. */
+@Composable
+private fun isLightSurface(): Boolean {
+    val surface = MaterialTheme.colorScheme.surface
+    return remember(surface) { surface.luminance() > 0.5f }
+}
+
 @Composable
 fun glassContentColor(): Color =
-    if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) Color.Black else Color.White
+    if (isLightSurface()) Color.Black else Color.White
 
 @Composable
 fun glassIndicatorColor(): Color =
-    if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) {
+    if (isLightSurface()) {
         Color.White.copy(alpha = 0.5f)
     } else {
         Color.White.copy(alpha = DARK_INDICATOR_OPACITY)
@@ -85,12 +93,13 @@ object LiquidGlassSetting {
 @Composable
 fun Modifier.lightweightLiquidGlass(shape: CornerBasedShape, fallbackColor: Color): Modifier {
     val useGlass = LocalLiquidGlassEnabled.current && isGlassSupported()
-    val glassTint = if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) {
+    val glassTint = if (isLightSurface()) {
         Color(0xFFFAFAFA)
     } else {
         Color(0xFF121212)
     }
-    val shapeProvider = ShapeProvider { shape }
+    // Same instance while the shape is the same, so the highlight element is not replaced every recomposition.
+    val shapeProvider = remember(shape) { ShapeProvider { shape } }
     return clip(shape)
         .background(
             color = if (useGlass) glassTint.copy(alpha = SURFACE_OPACITY) else fallbackColor,
@@ -121,15 +130,16 @@ fun Modifier.liquidGlass(
     val blurPx = with(density) { BLUR_RADIUS_DP.dp.toPx() } * GLASS_RESOLUTION_SCALE
     val lensHeightPx = with(density) { (LENS_HEIGHT * LENS_MAX_DP).dp.toPx() } * GLASS_RESOLUTION_SCALE
     val lensAmountPx = with(density) { (LENS_AMOUNT * LENS_MAX_DP).dp.toPx() } * GLASS_RESOLUTION_SCALE
-    val themeTint = if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) {
+    val themeTint = if (isLightSurface()) {
         Color(0xFFFAFAFA)
     } else {
         Color(0xFF121212)
     }
     val surfaceTintColor = surfaceTint ?: themeTint.copy(alpha = SURFACE_OPACITY)
+    val shapeOf = remember(shape) { { shape } }
     return drawBackdrop(
         backdrop = backdrop,
-        shape = { shape },
+        shape = shapeOf,
         effects = {
             colorControls(saturation = 1f + 0.5f * VIBRANCY)
             blur(blurPx)

@@ -26,6 +26,7 @@ import androidx.compose.material.icons.rounded.PictureInPictureAlt
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.TransformOrigin
@@ -173,7 +174,7 @@ fun VideoContent(
         }
     }
     val reduced = rememberReducedMotion()
-    val visibleAlpha by animateFloatAsState(
+    val visibleAlphaState = animateFloatAsState(
         targetValue = if (controlsVisible) 1f else 0f,
         animationSpec = if (reduced) tween(0) else tween(160, easing = Motion.Emphasized),
         label = "controlsAlpha",
@@ -511,19 +512,14 @@ fun VideoContent(
                 }
             }
         }
-        val chromeAlpha = if (scrubbing) 0f else visibleAlpha * controlsAlpha()
-        VideoControlsOverlay.dimAlpha = chromeAlpha
+        // Lido no layer e no efeito, nunca aqui: o morph move controlsAlpha a cada frame.
+        val chromeAlpha = { if (state.scrubDragging) 0f else visibleAlphaState.value * controlsAlpha() }
+        val chromeNow by rememberUpdatedState(chromeAlpha)
+        LaunchedEffect(Unit) { snapshotFlow { chromeNow() }.collect { VideoControlsOverlay.dimAlpha = it } }
         DisposableEffect(Unit) { onDispose { VideoControlsOverlay.dimAlpha = 0f } }
-        Box(Modifier.fillMaxSize().graphicsLayer { alpha = chromeAlpha }) {
+        Box(Modifier.fillMaxSize().graphicsLayer { alpha = chromeAlpha() }) {
             Box(
-                Modifier.fillMaxSize().background(
-                    Brush.verticalGradient(
-                        0f to Color.Black.copy(alpha = 0.5f),
-                        0.32f to Color.Black.copy(alpha = 0.08f),
-                        0.58f to Color.Black.copy(alpha = 0.08f),
-                        1f to Color.Black.copy(alpha = 0.62f),
-                    ),
-                ),
+                Modifier.fillMaxSize().background(ControlsScrim),
             )
             // Skipii's on-video controls: tonal tiles, seek step from Settings, cards in fullscreen.
             val tool = if (fullscreen) 40.dp else 36.dp
@@ -620,21 +616,8 @@ fun VideoContent(
                             bottom = EdgeScrubTimeRowBottomPad + if (fullscreenControlsScrub) FullscreenControlsLift else 0.dp,
                         ),
                 ) {
-                    val shownMs = state.scrubPreviewMs ?: state.positionMs
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                            Text(formatDuration(shownMs), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-                            Text(
-                                " / " + formatDuration(state.durationMs),
-                                color = Color.White.copy(alpha = 0.72f), fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1,
-                            )
-                            state.chapterAt(shownMs)?.let {
-                                Text(
-                                    " · $it", color = Color.White.copy(alpha = 0.72f), fontSize = 12.sp, fontWeight = FontWeight.Bold,
-                                    maxLines = 1, overflow = TextOverflow.Ellipsis,
-                                )
-                            }
-                        }
+                        TimeLabel(state, Modifier.weight(1f))
                         state.askSegment?.let { segment ->
                             SkipSegmentPill(segment, enabled = true) { touched(); state.skipSegment(segment) }
                         }
@@ -658,9 +641,12 @@ fun VideoContent(
         // Portrait keeps the thin edge bar when controls are hidden; fullscreen hides the scrubber until controls (or a drag) show.
         if (state.error == null && (!fullscreenControlsScrub || controlsVisible || scrubbing)) {
             val scrubActive = controlsVisible && interactive
-            val morphFade = controlsAlpha()
-            val scrubFade = if (scrubbing) 1f else morphFade
-            val segments = if (SponsorBlock.enabled) state.segments.filter { it.action != SponsorBlock.Action.Off } else emptyList()
+            val scrubFade = { if (state.scrubDragging) 1f else controlsAlpha() }
+            val allSegments = state.segments
+            val sponsorOn = SponsorBlock.enabled
+            val segments = remember(allSegments, sponsorOn) {
+                if (sponsorOn) allSegments.filter { it.action != SponsorBlock.Action.Off } else emptyList()
+            }
             val scrubModifier = when {
                 portraitEdgeScrub -> Modifier
                     .align(Alignment.BottomCenter)
@@ -668,24 +654,24 @@ fun VideoContent(
                     // Fixed on the stage/page seam; the morph layer moves it with the video.
                     .offset(y = EdgeScrubTouchPadBelow)
                     .height(EdgeScrubTouchHeight)
-                    .graphicsLayer { alpha = scrubFade }
+                    .graphicsLayer { alpha = scrubFade() }
                 fullscreenControlsScrub -> Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .fullscreenControlsHorizontalInsets()
                     .padding(bottom = FullscreenScrubBottomPad + FullscreenControlsLift)
                     .height(FullscreenScrubTouchHeight)
-                    .graphicsLayer { alpha = scrubFade }
+                    .graphicsLayer { alpha = scrubFade() }
                 else -> Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .height(EdgeScrubTouchPadAbove * 2)
-                    .graphicsLayer { alpha = scrubFade }
+                    .graphicsLayer { alpha = scrubFade() }
             }
             Scrubber(
                 segments = segments,
-                positionMs = state.positionMs,
-                bufferedMs = state.bufferedMs,
+                positionMs = { state.positionMs },
+                bufferedMs = { state.bufferedMs },
                 durationMs = state.durationMs,
                 enabled = interactive,
                 active = scrubActive,
@@ -830,8 +816,8 @@ fun AudioOnlyStage(
                 }
                 Scrubber(
                     segments = if (SponsorBlock.enabled) state.segments.filter { it.action != SponsorBlock.Action.Off } else emptyList(),
-                    positionMs = state.positionMs,
-                    bufferedMs = state.bufferedMs,
+                    positionMs = { state.positionMs },
+                    bufferedMs = { state.bufferedMs },
                     durationMs = state.durationMs,
                     enabled = interactive,
                     onPreview = { scrubPreview = it },
@@ -1079,6 +1065,33 @@ private fun fillScale(w: Float, h: Float, aspect: Float): Float {
     if (w <= 0f || h <= 0f || aspect <= 0f) return 1f
     val stage = w / h
     return max(stage / aspect, aspect / stage)
+}
+
+/** The controls' dark gradient: built once, not on every recomposition. */
+private val ControlsScrim = Brush.verticalGradient(
+    0f to Color.Black.copy(alpha = 0.5f),
+    0.32f to Color.Black.copy(alpha = 0.08f),
+    0.58f to Color.Black.copy(alpha = 0.08f),
+    1f to Color.Black.copy(alpha = 0.62f),
+)
+
+/** "0:12 / 3:40 · chapter". Reads the position here, so only this label recomposes on a tick. */
+@Composable
+private fun TimeLabel(state: PlayerState, modifier: Modifier = Modifier) {
+    val shownMs = state.scrubPreviewMs ?: state.positionMs
+    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+        Text(formatDuration(shownMs), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+        Text(
+            " / " + formatDuration(state.durationMs),
+            color = Color.White.copy(alpha = 0.72f), fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1,
+        )
+        state.chapterAt(shownMs)?.let {
+            Text(
+                " · $it", color = Color.White.copy(alpha = 0.72f), fontSize = 12.sp, fontWeight = FontWeight.Bold,
+                maxLines = 1, overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
 }
 
 private const val ZoomDecide = 0.04f
@@ -1741,8 +1754,8 @@ private val FullscreenScrubKnobDragging = 6.dp
 @Composable
 private fun Scrubber(
     segments: List<SponsorBlock.Segment>,
-    positionMs: Long,
-    bufferedMs: Long,
+    positionMs: () -> Long,
+    bufferedMs: () -> Long,
     durationMs: Long,
     enabled: Boolean,
     onPreview: (Long) -> Unit,
@@ -1765,8 +1778,6 @@ private fun Scrubber(
     var dragFraction by remember { mutableStateOf<Float?>(null) }
     val currentPositionMs by rememberUpdatedState(positionMs)
     val duration = durationMs.coerceAtLeast(1L)
-    val playedFraction = dragFraction ?: (positionMs.toFloat() / duration).coerceIn(0f, 1f)
-    val bufferedFraction = (bufferedMs.toFloat() / duration).coerceIn(0f, 1f)
     val dragging = dragFraction != null
     // Controls visible, or a lone drag while they're hidden: red + thumb, no overlay.
     val chromeActive = active || dragging
@@ -1790,7 +1801,7 @@ private fun Scrubber(
                     val down = awaitFirstDown()
                     down.consume()
                     val width = (size.width - endInset * 2f).coerceAtLeast(1f)
-                    var fraction = (currentPositionMs.toFloat() / duration).coerceIn(0f, 1f)
+                    var fraction = (currentPositionMs().toFloat() / duration).coerceIn(0f, 1f)
                     var dragged = false
                     var slopAccum = Offset.Zero
                     while (true) {
@@ -1815,7 +1826,7 @@ private fun Scrubber(
                             if (slopAccum.getDistance() < slop) continue
                             dragged = true
                             onDraggingChanged(true)
-                            fraction = (currentPositionMs.toFloat() / duration).coerceIn(0f, 1f)
+                            fraction = (currentPositionMs().toFloat() / duration).coerceIn(0f, 1f)
                             dragFraction = fraction
                             onPreview((fraction * durationMs).toLong())
                         } else {
@@ -1832,6 +1843,8 @@ private fun Scrubber(
                 }
             },
     ) {
+        val playedFraction = dragFraction ?: (positionMs().toFloat() / duration).coerceIn(0f, 1f)
+        val bufferedFraction = (bufferedMs().toFloat() / duration).coerceIn(0f, 1f)
         val trackH = h.toPx()
         val centerY = if (edgeToEdge) edgeTouchPadAbove.toPx() else size.height / 2f
         val y = centerY - trackH / 2f
