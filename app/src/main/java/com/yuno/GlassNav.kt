@@ -141,13 +141,12 @@ fun GlassNavBar(
                 if (!isSelected) haptics.select()
                 currentOnTabSelected(tab)
             }
-            val label = stringResource(tab.labelRes)
             tab(
                 key = tab,
                 icon = {
                     Icon(
                         imageVector = tab.icon,
-                        contentDescription = label,
+                        contentDescription = stringResource(tab.labelRes),
                         tint = tint,
                         modifier = Modifier.size(TabIconSize).graphicsLayer {
                             scaleX = tab.iconScale
@@ -157,7 +156,7 @@ fun GlassNavBar(
                 },
                 title = {
                     Text(
-                        text = label,
+                        text = stringResource(tab.labelRes),
                         style = tabLabelStyle(),
                         color = tint,
                         maxLines = 1,
