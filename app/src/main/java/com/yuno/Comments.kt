@@ -405,6 +405,13 @@ fun PlayerPanel(
         val fullPx = with(density) { (maxHeight - statusTop - 8.dp).toPx() }
         val partialPx = with(density) { (maxHeight - partialTop).toPx() }.coerceIn(fullPx * 0.35f, fullPx)
         val height = remember { Animatable(partialPx) }
+        var restingHeight by remember { mutableStateOf(partialPx) }
+        LaunchedEffect(partialPx) {
+            // The video stage can finish its aspect-ratio animation after the panel opens.
+            // Follow that change while resting, but don't interrupt a user drag or expansion.
+            if (kotlin.math.abs(height.value - restingHeight) < 1f) height.snapTo(partialPx)
+            restingHeight = partialPx
+        }
         // Slides up into place on open; slides back down to close.
         val slide = remember { Animatable(1f) }
         LaunchedEffect(Unit) { if (reduced) slide.snapTo(0f) else slide.animateTo(0f, spring(dampingRatio = 0.86f, stiffness = 550f)) }
