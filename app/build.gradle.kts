@@ -17,14 +17,32 @@ android {
         buildConfigField("String", "GITHUB_RELEASES_REPO", "\"danielkanan/Yuno\"")
     }
 
+    // Fixed key supplied by CI (GitHub secrets) so every build has the same signature
+    // and can update the previous install. Without it, falls back to the debug key.
+    signingConfigs {
+        create("ci") {
+            val ks = System.getenv("KEYSTORE_PATH")
+            if (ks != null) {
+                storeFile = file(ks)
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
+        debug {
+            if (System.getenv("KEYSTORE_PATH") != null) {
+                signingConfig = signingConfigs.getByName("ci")
+            }
+        }
         release {
             // Judge speed and smoothness on this build type, never on debug.
             isMinifyEnabled = true
             isShrinkResources = true
-            // Sideloaded personal build: the debug key is fine until there's a reason
-            // to distribute it.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (System.getenv("KEYSTORE_PATH") != null)
+                signingConfigs.getByName("ci") else signingConfigs.getByName("debug")
             // ML Kit's translator (captions) is the app's only native code, ~16 MB per CPU type: phones only
             // (64- and 32-bit ARM). Debug keeps x86 for the emulator.
             ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
