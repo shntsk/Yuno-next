@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bar_tab_home">الرئيسية</string>
+    <string name="bar_tab_shorts">Shorts</string>
+    <string name="bar_tab_subscriptions">الاشتراكات</string>
+    <string name="bar_tab_library">المكتبة</string>
+    <string name="player_description_title">الوصف</string>
+    <string name="player_description_close">إغلاق الوصف</string>
+    <string name="player_description_likes">الإعجابات</string>
+    <string name="player_description_views">المشاهدات</string>
+    <string name="player_description_uploaded">تاريخ الرفع</string>
+    <string name="hashtag_tab_all">الكل</string>
+    <string name="hashtag_tab_shorts">Shorts</string>
+    <string name="hashtag_page_subtitle">فيديوهات بهذا الوسم</string>
+    <string name="hashtag_error_title">تعذّر تحميل هذا الوسم</string>
+    <string name="hashtag_empty_title">لم يتم العثور على فيديوهات</string>
+    <string name="hashtag_empty_body">لا توجد فيديوهات لهذا الوسم بعد.</string>
+</resources>
