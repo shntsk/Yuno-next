@@ -185,7 +185,6 @@ fun PlayerScreen(
     val details = state.details
     val top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    var descriptionOpen by remember(item.id) { mutableStateOf(false) }
     // Audio only (Derek, 2026-10-25): the open player has no video space at all — the stage
     // folds away (the picture fading and lifting as its height closes) and unfolds for video.
     // Only on the fully open player: swiping it down unfolds it again, so the thumbnail still
@@ -269,34 +268,25 @@ fun PlayerScreen(
                             letterSpacing = (-0.6).sp,
                         )
                         Spacer(Modifier.height(6.dp))
+                        val statsItem = details?.item ?: item
                         val stats = listOfNotNull(
-                            item.views.takeIf { it >= 0 }?.let { "${formatCount(it)} views" },
-                            item.uploaded?.ifBlank { null },
+                            statsItem.views.takeIf { it >= 0 }?.let { "${formatCount(it)} views" },
+                            YouTube.uploadedLabel(statsItem)?.ifBlank { null },
                             details?.likes?.takeIf { it > 0 }?.let { "${formatCount(it)} likes" },
                         ).joinDots()
                         val hasDescription = !details?.description.isNullOrBlank()
                         Row(
-                            modifier = if (hasDescription) Modifier.pressable(pressedScale = 0.98f) { descriptionOpen = !descriptionOpen } else Modifier,
+                            modifier = if (hasDescription) Modifier.pressable(pressedScale = 0.98f) { state.sheet = PlayerSheet.Description } else Modifier,
                         ) {
                             Text(stats, color = c.onSurfaceVariant, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                             if (hasDescription) {
                                 Text(
-                                    if (descriptionOpen) "  less" else "  …more",
+                                    "  …more",
                                     color = c.onSurface,
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.ExtraBold,
                                 )
                             }
-                        }
-                        if (descriptionOpen && details != null) {
-                            Text(
-                                details.description,
-                                modifier = Modifier.padding(top = 10.dp),
-                                color = c.onSurfaceVariant,
-                                fontSize = 14.sp,
-                                lineHeight = 20.sp,
-                                fontWeight = FontWeight.Medium,
-                            )
                         }
                         Spacer(Modifier.height(16.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -385,6 +375,15 @@ fun PlayerScreen(
             val screenW = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp.dp
             val videoBottom = top + StageTopGap + (screenW - StageSideGap * 2) / state.stageAspect
             TranscriptPanel(
+                state,
+                partialTop = videoBottom + 10.dp,
+                onClose = { state.sheet = null },
+            )
+        }
+        if (state.sheet == PlayerSheet.Description) {
+            val screenW = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp.dp
+            val videoBottom = top + StageTopGap + (screenW - StageSideGap * 2) / state.stageAspect
+            DescriptionPanel(
                 state,
                 partialTop = videoBottom + 10.dp,
                 onClose = { state.sheet = null },
