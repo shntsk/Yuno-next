@@ -468,6 +468,21 @@ fun YunoApp() {
                 optionsFor = video
             },
             LocalChannelOpener provides { url -> showChannel(url) },
+            LocalVideoLinkOpener provides { id ->
+                player.open(
+                    VideoItem(
+                        id = id,
+                        title = "",
+                        channel = "",
+                        channelUrl = null,
+                        thumbnail = null,
+                        avatar = null,
+                        durationSec = 0,
+                        views = -1,
+                        uploaded = null,
+                    ),
+                )
+            },
             LocalWindowLayout provides windowLayout,
             LocalAppHaze provides hazeState,
             LocalLiquidGlassEnabled provides glassOn,
