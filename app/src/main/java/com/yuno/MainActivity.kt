@@ -739,7 +739,7 @@ fun YunoApp() {
             PlayerSheet.Quality -> QualitySheet(player, onDismiss = { player.sheet = null })
             PlayerSheet.Speed -> SpeedSheet(player, onDismiss = { player.sheet = null })
             PlayerSheet.Chapters -> ChaptersSheet(player, onDismiss = { player.sheet = null })
-            PlayerSheet.Comments, PlayerSheet.Transcript -> Unit // a panel inside the player (PlayerScreen)
+            PlayerSheet.Comments, PlayerSheet.Description, PlayerSheet.Transcript -> Unit // panels inside the player (PlayerScreen)
             PlayerSheet.Captions -> CaptionsSheet(player, onDismiss = { player.sheet = null }, onTranscript = { player.sheet = PlayerSheet.Transcript })
             PlayerSheet.Queue -> QueueSheet(player, onDismiss = { player.sheet = null })
             null -> Unit
