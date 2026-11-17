@@ -16,7 +16,7 @@ import androidx.compose.ui.text.style.TextDecoration
 val LocalVideoLinkOpener = staticCompositionLocalOf<(String) -> Unit> { {} }
 
 private const val LINK_TAG = "yuno-link"
-private val URL_PATTERN = Regex("""(?i)\b(?:https?://|www\.)[^\s<>"']+""")
+private val URL_PATTERN = Regex("""(?i)(?<![A-Za-z0-9_@])(?:(?:https?://|www\.)[^\s<>"']+|(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}(?:/[^\s<>"']*)?)""")
 private val HANDLE_PATTERN = Regex("""(?<![A-Za-z0-9._%+-])@[A-Za-z0-9][A-Za-z0-9._-]{1,28}[A-Za-z0-9]""")
 private val VIDEO_ID_PATTERN = Regex("^[A-Za-z0-9_-]{11}$")
 
@@ -103,7 +103,9 @@ private fun resolveLink(raw: String): LinkDestination {
     val url = when {
         raw.startsWith("www.", ignoreCase = true) -> "https://$raw"
         raw.startsWith("http://", ignoreCase = true) || raw.startsWith("https://", ignoreCase = true) -> raw
-        else -> raw
+        raw.startsWith("mailto:", ignoreCase = true) || raw.startsWith("tel:", ignoreCase = true) -> raw
+        raw.contains("://") -> raw
+        else -> "https://$raw"
     }
     val uri = Uri.parse(url)
     val host = uri.host.orEmpty().lowercase()
