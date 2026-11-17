@@ -353,6 +353,50 @@ object InnerTube {
     private const val GUEST_HOME_QUERY = "popular videos"
 
     /**
+     * Videos associated with a YouTube hashtag. Type 1 is the regular video tab; type 2 is Shorts.
+     * The Hashtag protobuf wraps Params(hashtag = field 1, type = field 3) in field 93.
+     */
+    suspend fun hashtagFeed(tag: String, type: Int = 1, continuation: String? = null): FeedPage = withContext(Dispatchers.IO) {
+        require(type == 1 || type == 2) { "Unsupported hashtag feed type: $type" }
+        val body = if (continuation != null) {
+            JSONObject().put("continuation", continuation)
+        } else {
+            JSONObject()
+                .put("browseId", "FEhashtag")
+                .put("params", hashtagParams(tag, type))
+        }
+        val root = postAny("browse", body)
+        if (type == 2) parseChannelShorts(root) else parseFeed(root)
+    }
+
+    private fun hashtagParams(tag: String, type: Int): String {
+        val bytes = tag.trim().removePrefix("#").toByteArray(Charsets.UTF_8)
+        require(bytes.isNotEmpty()) { "Hashtag cannot be empty" }
+
+        fun writeVarint(out: java.io.ByteArrayOutputStream, value: Int) {
+            var remaining = value
+            while (remaining > 0x7f) {
+                out.write((remaining and 0x7f) or 0x80)
+                remaining = remaining ushr 7
+            }
+            out.write(remaining)
+        }
+
+        val params = java.io.ByteArrayOutputStream()
+        params.write(0x0a)
+        writeVarint(params, bytes.size)
+        params.write(bytes)
+        params.write(0x18)
+        writeVarint(params, type)
+
+        val message = java.io.ByteArrayOutputStream()
+        writeVarint(message, (93 shl 3) or 2)
+        writeVarint(message, params.size())
+        message.write(params.toByteArray())
+        return java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(message.toByteArray())
+    }
+
+    /**
      * A channel's uploads (Videos tab), members-only ones filtered out like everywhere else. The
      * first page carries the tab's sort as chips (Latest · Popular · Oldest); a chip's token is a
      * continuation that reloads the list in that order, read like any next page.
