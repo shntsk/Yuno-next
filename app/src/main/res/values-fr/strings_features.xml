@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bar_tab_home">Accueil</string>
+    <string name="bar_tab_shorts">Shorts</string>
+    <string name="bar_tab_subscriptions">Abonnements</string>
+    <string name="bar_tab_library">Bibliothèque</string>
+    <string name="player_description_title">Description</string>
+    <string name="player_description_close">Fermer la description</string>
+    <string name="player_description_likes">J’aime</string>
+    <string name="player_description_views">Vues</string>
+    <string name="player_description_uploaded">Mis en ligne</string>
+    <string name="hashtag_tab_all">Tout</string>
+    <string name="hashtag_tab_shorts">Shorts</string>
+    <string name="hashtag_page_subtitle">Vidéos avec ce hashtag</string>
+    <string name="hashtag_error_title">Impossible de charger ce hashtag</string>
+    <string name="hashtag_empty_title">Aucune vidéo trouvée</string>
+    <string name="hashtag_empty_body">Aucune vidéo pour ce hashtag pour le moment.</string>
+</resources>
