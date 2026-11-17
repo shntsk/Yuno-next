@@ -972,9 +972,9 @@ fun rememberPlayerState(): PlayerState {
     return state
 }
 
-enum class PlayerSheet { Quality, Speed, Chapters, Comments, Queue, Captions, Transcript }
+enum class PlayerSheet { Quality, Speed, Chapters, Comments, Description, Queue, Captions, Transcript }
 
-val PlayerSheet?.isPanel: Boolean get() = this == PlayerSheet.Comments || this == PlayerSheet.Transcript
+val PlayerSheet?.isPanel: Boolean get() = this == PlayerSheet.Comments || this == PlayerSheet.Description || this == PlayerSheet.Transcript
 
 private const val TAG = "Yuno"
 /** Background audio-only kicks in only after this long; quick app switches keep video loaded. */
