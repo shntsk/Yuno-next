@@ -60,6 +60,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import kotlin.math.roundToInt
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -286,7 +287,7 @@ fun PlayerScreen(
                             Text(stats, color = c.onSurfaceVariant, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                             if (hasDescription) {
                                 Text(
-                                    "  …more",
+                                    "  " + stringResource(R.string.player_description_more),
                                     color = c.onSurface,
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.ExtraBold,
