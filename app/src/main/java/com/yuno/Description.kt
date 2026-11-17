@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -45,10 +46,10 @@ fun DescriptionPanel(state: PlayerState, partialTop: Dp, onClose: () -> Unit) {
     PlayerPanel(
         partialTop = partialTop,
         onClose = onClose,
-        closeLabel = "Close description",
+        closeLabel = stringResource(R.string.player_description_close),
         title = {
             Text(
-                "Description",
+                stringResource(R.string.player_description_title),
                 fontFamily = RoundedHeavy,
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 21.sp,
@@ -87,13 +88,13 @@ fun DescriptionPanel(state: PlayerState, partialTop: Dp, onClose: () -> Unit) {
             Spacer(Modifier.height(18.dp))
             Row(Modifier.fillMaxWidth()) {
                 details.likes.takeIf { it > 0 }?.let {
-                    DescriptionStat(formatCount(it), "Likes", Modifier.weight(1f))
+                    DescriptionStat(formatCount(it), stringResource(R.string.player_description_likes), Modifier.weight(1f))
                 }
                 item.views.takeIf { it >= 0 }?.let {
-                    DescriptionStat(formatCount(it), "Views", Modifier.weight(1f))
+                    DescriptionStat(formatCount(it), stringResource(R.string.player_description_views), Modifier.weight(1f))
                 }
                 YouTube.uploadedLabel(item)?.ifBlank { null }?.let {
-                    DescriptionStat(it, "Uploaded", Modifier.weight(1.35f))
+                    DescriptionStat(it, stringResource(R.string.player_description_uploaded), Modifier.weight(1.35f))
                 }
             }
 
