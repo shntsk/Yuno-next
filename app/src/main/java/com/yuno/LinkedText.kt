@@ -14,9 +14,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 
 val LocalVideoLinkOpener = staticCompositionLocalOf<(String) -> Unit> { {} }
+val LocalHashtagOpener = staticCompositionLocalOf<(String) -> Unit> { {} }
 
 private const val LINK_TAG = "yuno-link"
 private val URL_PATTERN = Regex("""(?i)(?<![A-Za-z0-9_@])(?:(?:https?://|www\.)[^\s<>"']+|(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}(?:/[^\s<>"']*)?)""")
+private val HASHTAG_PATTERN = Regex("""(?<![\\p{L}\\p{N}_])#[\\p{L}\\p{N}_]+""")
 private val HANDLE_PATTERN = Regex("""(?<![A-Za-z0-9._%+-])@[A-Za-z0-9][A-Za-z0-9._-]{1,28}[A-Za-z0-9]""")
 private val VIDEO_ID_PATTERN = Regex("^[A-Za-z0-9_-]{11}$")
 
@@ -32,6 +34,7 @@ fun LinkedText(
     val uriHandler = LocalUriHandler.current
     val openChannel = LocalChannelOpener.current
     val openVideo = LocalVideoLinkOpener.current
+    val openHashtag = LocalHashtagOpener.current
     val background = androidx.compose.material3.MaterialTheme.colorScheme.background
     val linkColor = if (background.luminance() < 0.5f) Color(0xFF3EA6FF) else Color(0xFF065FD4)
     val annotated = remember(text, links, linkColor) {
@@ -44,6 +47,9 @@ fun LinkedText(
             URL_PATTERN.findAll(text).forEach { match ->
                 val clean = match.value.trimEnd('.', ',', '!', '?', ';', ':', ')', ']', '}')
                 if (clean.isNotEmpty()) add(LinkRange(match.range.first, match.range.first + clean.length, clean))
+            }
+            HASHTAG_PATTERN.findAll(text).forEach { match ->
+                add(LinkRange(match.range.first, match.range.last + 1, match.value))
             }
             HANDLE_PATTERN.findAll(text).forEach { match ->
                 val handle = match.value
@@ -84,6 +90,7 @@ fun LinkedText(
             when (val destination = resolveLink(target)) {
                 is LinkDestination.Video -> openVideo(destination.id)
                 is LinkDestination.Channel -> openChannel(destination.url)
+                is LinkDestination.Hashtag -> openHashtag(destination.tag)
                 is LinkDestination.External -> uriHandler.openUri(destination.url)
             }
         },
@@ -93,10 +100,12 @@ fun LinkedText(
 private sealed interface LinkDestination {
     data class Video(val id: String) : LinkDestination
     data class Channel(val url: String) : LinkDestination
+    data class Hashtag(val tag: String) : LinkDestination
     data class External(val url: String) : LinkDestination
 }
 
 private fun resolveLink(raw: String): LinkDestination {
+    if (raw.startsWith("#") && raw.length > 1) return LinkDestination.Hashtag(raw.drop(1))
     val url = when {
         raw.startsWith("www.", ignoreCase = true) -> "https://$raw"
         raw.startsWith("http://", ignoreCase = true) || raw.startsWith("https://", ignoreCase = true) -> raw
@@ -111,6 +120,9 @@ private fun resolveLink(raw: String): LinkDestination {
 
     if (youtubeHost) {
         val first = path.firstOrNull().orEmpty()
+        if (first == "hashtag" && path.getOrNull(1).orEmpty().isNotBlank()) {
+            return LinkDestination.Hashtag(path[1])
+        }
         val videoId = when {
             host == "youtu.be" -> first
             first == "watch" -> uri.getQueryParameter("v")
