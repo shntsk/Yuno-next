@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bar_tab_home">ホーム</string>
+    <string name="bar_tab_shorts">ショート</string>
+    <string name="bar_tab_subscriptions">登録チャンネル</string>
+    <string name="bar_tab_library">ライブラリ</string>
+    <string name="player_description_title">概要</string>
+    <string name="player_description_close">概要を閉じる</string>
+    <string name="player_description_likes">高評価</string>
+    <string name="player_description_views">視聴回数</string>
+    <string name="player_description_uploaded">アップロード日</string>
+    <string name="hashtag_tab_all">すべて</string>
+    <string name="hashtag_tab_shorts">ショート</string>
+    <string name="hashtag_page_subtitle">このハッシュタグの動画</string>
+    <string name="hashtag_error_title">ハッシュタグを読み込めませんでした</string>
+    <string name="hashtag_empty_title">動画が見つかりません</string>
+    <string name="hashtag_empty_body">このハッシュタグの動画はまだありません。</string>
+</resources>
