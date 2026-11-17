@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
@@ -81,7 +82,7 @@ private fun RailTab(tab: Tab, selected: Boolean, onClick: () -> Unit) {
         }
         Spacer(Modifier.height(4.dp))
         Text(
-            tab.label,
+            stringResource(tab.labelRes),
             fontSize = 11.5.sp,
             fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.Bold,
             color = if (selected) c.onSurface else c.onSurfaceVariant,
