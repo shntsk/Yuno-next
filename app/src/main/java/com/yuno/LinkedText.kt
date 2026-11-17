@@ -1,0 +1,132 @@
+package com.yuno
+
+import android.net.Uri
+import androidx.compose.foundation.text.ClickableText
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.sp
+
+val LocalVideoLinkOpener = staticCompositionLocalOf<(String) -> Unit> { {} }
+
+private const val LINK_TAG = "yuno-link"
+private val URL_PATTERN = Regex("""(?i)\\b(?:https?://|www\\.)[^\\s<>"']+""")
+private val HANDLE_PATTERN = Regex("""(?<![A-Za-z0-9._%+-])@[A-Za-z0-9][A-Za-z0-9._-]{1,28}[A-Za-z0-9]""")
+private val VIDEO_ID_PATTERN = Regex("^[A-Za-z0-9_-]{11}$")
+
+private data class LinkRange(val start: Int, val end: Int, val target: String)
+
+@Composable
+fun LinkedText(
+    text: String,
+    modifier: Modifier = Modifier,
+    style: TextStyle,
+    links: List<TextLinkRange> = emptyList(),
+) {
+    val uriHandler = LocalUriHandler.current
+    val openChannel = LocalChannelOpener.current
+    val openVideo = LocalVideoLinkOpener.current
+    val linkColor = androidx.compose.material3.MaterialTheme.colorScheme.primary
+    val annotated = remember(text, links, linkColor) {
+        val ranges = buildList {
+            links.forEach { link ->
+                if (link.start in 0 until text.length && link.end in 1..text.length &&
+                    link.start < link.end && link.url.isNotBlank()
+                ) add(LinkRange(link.start, link.end, link.url))
+            }
+            URL_PATTERN.findAll(text).forEach { match ->
+                val clean = match.value.trimEnd('.', ',', '!', '?', ';', ':', ')', ']', '}')
+                if (clean.isNotEmpty()) add(LinkRange(match.range.first, match.range.first + clean.length, clean))
+            }
+            HANDLE_PATTERN.findAll(text).forEach { match ->
+                val handle = match.value
+                add(LinkRange(match.range.first, match.range.last + 1, "https://www.youtube.com/$handle"))
+            }
+        }.sortedWith(compareBy<LinkRange> { it.start }.thenByDescending { it.end - it.start })
+
+        val accepted = mutableListOf<LinkRange>()
+        for (range in ranges) {
+            if (range.start >= 0 && range.end <= text.length &&
+                accepted.none { range.start < it.end && range.end > it.start }
+            ) accepted += range
+        }
+        buildAnnotatedString {
+            var cursor = 0
+            accepted.sortedBy { it.start }.forEach { range ->
+                append(text.substring(cursor, range.start))
+                pushStringAnnotation(LINK_TAG, range.target)
+                pushStyle(
+                    SpanStyle(
+                        color = linkColor,
+                        fontWeight = FontWeight.Medium,
+                        textDecoration = TextDecoration.Underline,
+                    ),
+                )
+                append(text.substring(range.start, range.end))
+                pop()
+                pop()
+                cursor = range.end
+            }
+            append(text.substring(cursor))
+        }
+    }
+
+    ClickableText(
+        text = annotated,
+        modifier = modifier,
+        style = style,
+        onClick = { offset ->
+            val target = annotated.getStringAnnotations(LINK_TAG, offset, offset).firstOrNull()?.item
+                ?: return@ClickableText
+            when (val destination = resolveLink(target)) {
+                is LinkDestination.Video -> openVideo(destination.id)
+                is LinkDestination.Channel -> openChannel(destination.url)
+                is LinkDestination.External -> uriHandler.openUri(destination.url)
+            }
+        },
+    )
+}
+
+private sealed interface LinkDestination {
+    data class Video(val id: String) : LinkDestination
+    data class Channel(val url: String) : LinkDestination
+    data class External(val url: String) : LinkDestination
+}
+
+private fun resolveLink(raw: String): LinkDestination {
+    val url = when {
+        raw.startsWith("www.", ignoreCase = true) -> "https://$raw"
+        raw.startsWith("http://", ignoreCase = true) || raw.startsWith("https://", ignoreCase = true) -> raw
+        else -> raw
+    }
+    val uri = Uri.parse(url)
+    val host = uri.host.orEmpty().lowercase()
+    val path = uri.pathSegments
+    val youtubeHost = host == "youtu.be" || host == "youtube.com" || host.endsWith(".youtube.com")
+
+    if (youtubeHost) {
+        val videoId = when {
+            host == "youtu.be" -> path.firstOrNull()
+            path.firstOrNull() == "watch" -> uri.getQueryParameter("v")
+            path.firstOrNull() in setOf("shorts", "live", "embed", "v") -> path.getOrNull(1)
+            else -> null
+        }?.takeIf { VIDEO_ID_PATTERN.matches(it) }
+        if (videoId != null) return LinkDestination.Video(videoId)
+
+        val first = path.firstOrNull().orEmpty()
+        if (first.startsWith("@") && first.length > 1 ||
+            first in setOf("channel", "c", "user")
+        ) return LinkDestination.Channel(url)
+    }
+
+    return LinkDestination.External(url)
+}
