@@ -645,7 +645,11 @@ private fun CommentRow(comment: Comment, state: CommentsState, isReply: Boolean 
             Spacer(Modifier.height(3.dp))
             LinkedText(
                 text = comment.text,
-                style = androidx.compose.material3.LocalTextStyle.current.copy(fontSize = 14.sp, lineHeight = 20.sp),
+                style = androidx.compose.material3.LocalTextStyle.current.copy(
+                    color = c.onSurface,
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp,
+                ),
             )
             Spacer(Modifier.height(6.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
