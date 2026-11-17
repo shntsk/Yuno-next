@@ -49,6 +49,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -302,9 +303,10 @@ private fun GlassTabRow(
                         )
                         .padding(vertical = TabVerticalPadding),
                 ) {
+                    val label = stringResource(t.labelRes)
                     Icon(
                         t.icon,
-                        contentDescription = t.label,
+                        contentDescription = label,
                         tint = tint,
                         modifier = Modifier.size(TabIconSize).graphicsLayer {
                             scaleX = scale * t.iconScale
@@ -313,7 +315,7 @@ private fun GlassTabRow(
                     )
                     Spacer(Modifier.height(TabIconLabelGap))
                     Text(
-                        t.label,
+                        label,
                         style = tabLabelStyle(),
                         color = tint,
                         maxLines = 1,
