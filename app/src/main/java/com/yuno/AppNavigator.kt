@@ -17,6 +17,7 @@ sealed interface AppRoute {
     data object Search : AppRoute
     data class Playlist(val ref: PlaylistRef) : AppRoute
     data class Channel(val url: String) : AppRoute
+    data class Hashtag(val tag: String) : AppRoute
 }
 
 /**
