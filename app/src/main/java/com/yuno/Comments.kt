@@ -636,7 +636,10 @@ private fun CommentRow(comment: Comment, state: CommentsState, isReply: Boolean 
                 displayAge(comment.ago)?.let { Text(it, color = c.onSurfaceVariant, fontSize = 12.sp, maxLines = 1) }
             }
             Spacer(Modifier.height(3.dp))
-            Text(comment.text, fontSize = 14.sp, lineHeight = 20.sp)
+            LinkedText(
+                text = comment.text,
+                style = androidx.compose.material3.LocalTextStyle.current.copy(fontSize = 14.sp, lineHeight = 20.sp),
+            )
             Spacer(Modifier.height(6.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 // Like (signed in): pops like the video's like, and the count follows.
