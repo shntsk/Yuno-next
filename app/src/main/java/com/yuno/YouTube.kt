@@ -1,6 +1,7 @@
 package com.yuno
 
 import android.content.Context
+import android.text.style.URLSpan
 import android.content.SharedPreferences
 import android.os.SystemClock
 import android.util.Log
@@ -88,6 +89,8 @@ data class VideoDetails(
     val qualities: List<Int>,
     /** Width / height of the chosen stream, known before the first frame; null if unknown. */
     val aspect: Float? = null,
+    /** Clickable links retained from the original HTML description. */
+    val descriptionLinks: List<TextLinkRange> = emptyList(),
     /** The video's chapters in order (from its description timestamps / YouTube's markers); empty if none. */
     val chapters: List<Chapter> = emptyList(),
     /** YouTube's storyboards (the scrub preview's frames), smallest frames first; empty if none. */
@@ -95,6 +98,9 @@ data class VideoDetails(
     /** Every caption track YouTube has for this video (Captions.kt). */
     val captions: List<CaptionTrack> = emptyList(),
 )
+
+@Immutable
+data class TextLinkRange(val start: Int, val end: Int, val url: String)
 
 @Immutable
 data class Chapter(val startMs: Long, val title: String)
@@ -206,6 +212,7 @@ object YouTube {
     suspend fun details(id: String, wait: Boolean = true): VideoDetails = withContext(Dispatchers.IO) {
         val info = if (wait) BotCheck.retrying(id) { StreamCache.getOrLoad(id) } else BotCheck.withoutWaiting(id) { StreamCache.getOrLoad(id) }
         val picked = StreamSelection.pick(info)
+        val (descriptionText, descriptionLinks) = descriptionTextAndLinks(info.description)
         VideoDetails(
             item = VideoItem(
                 id = id,
@@ -219,10 +226,8 @@ object YouTube {
                 uploaded = uploadedText(info.textualUploadDate, info.uploadDate),
                 uploadedAt = info.uploadDate?.offsetDateTime()?.toInstant(),
             ),
-            description = info.description?.let { d ->
-                if (d.type == Description.HTML) HtmlCompat.fromHtml(d.content, HtmlCompat.FROM_HTML_MODE_COMPACT).toString().trim()
-                else d.content.trim()
-            }.orEmpty(),
+            description = descriptionText,
+            descriptionLinks = descriptionLinks,
             likes = info.likeCount,
             subscribers = info.uploaderSubscriberCount,
             related = info.relatedItems.filterIsInstance<StreamInfoItem>().mapNotNull { it.toVideoItem() },
@@ -293,6 +298,23 @@ object YouTube {
         if (textual != null && !ISO_DATE.containsMatchIn(textual)) return textual
         val then = date?.offsetDateTime()?.toInstant() ?: return textual?.substringBefore('T')
         return relativeTime(then)
+    }
+
+    private fun descriptionTextAndLinks(description: Description?): Pair<String, List<TextLinkRange>> {
+        if (description == null) return "" to emptyList()
+        if (description.type != Description.HTML) return description.content.trim() to emptyList()
+
+        val parsed = HtmlCompat.fromHtml(description.content, HtmlCompat.FROM_HTML_MODE_COMPACT)
+        val raw = parsed.toString()
+        val text = raw.trim()
+        if (text.isEmpty()) return "" to emptyList()
+        val leading = raw.indexOfFirst { !it.isWhitespace() }.coerceAtLeast(0)
+        val links = parsed.getSpans(0, parsed.length, URLSpan::class.java).mapNotNull { span ->
+            val start = (parsed.getSpanStart(span) - leading).coerceAtLeast(0)
+            val end = (parsed.getSpanEnd(span) - leading).coerceAtMost(text.length)
+            if (start < end && span.url.isNotBlank()) TextLinkRange(start, end, span.url) else null
+        }
+        return text to links
     }
 
     private val ISO_DATE = Regex("^\\d{4}-\\d{2}-\\d{2}T")
