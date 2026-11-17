@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bar_tab_home">Главная</string>
+    <string name="bar_tab_shorts">Shorts</string>
+    <string name="bar_tab_subscriptions">Подписки</string>
+    <string name="bar_tab_library">Библиотека</string>
+    <string name="player_description_title">Описание</string>
+    <string name="player_description_close">Закрыть описание</string>
+    <string name="player_description_likes">Нравится</string>
+    <string name="player_description_views">Просмотры</string>
+    <string name="player_description_uploaded">Загружено</string>
+    <string name="hashtag_tab_all">Все</string>
+    <string name="hashtag_tab_shorts">Shorts</string>
+    <string name="hashtag_page_subtitle">Видео с этим хэштегом</string>
+    <string name="hashtag_error_title">Не удалось загрузить хэштег</string>
+    <string name="hashtag_empty_title">Видео не найдены</string>
+    <string name="hashtag_empty_body">Для этого хэштега пока нет видео.</string>
+</resources>
