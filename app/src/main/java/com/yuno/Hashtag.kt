@@ -1,12 +1,12 @@
 package com.yuno
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -87,7 +87,7 @@ fun HashtagScreen(
                         color = c.onSurfaceVariant,
                         fontSize = 13.sp,
                     )
-                    Spacer(Modifier.padding(bottom = 8.dp))
+                    Spacer(Modifier.height(8.dp))
                 }
             }
             item(key = "hashtag-tabs") {
