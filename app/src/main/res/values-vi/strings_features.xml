@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bar_tab_home">Trang chủ</string>
+    <string name="bar_tab_shorts">Shorts</string>
+    <string name="bar_tab_subscriptions">Kênh đăng ký</string>
+    <string name="bar_tab_library">Thư viện</string>
+    <string name="player_description_title">Mô tả</string>
+    <string name="player_description_close">Đóng mô tả</string>
+    <string name="player_description_likes">Lượt thích</string>
+    <string name="player_description_views">Lượt xem</string>
+    <string name="player_description_uploaded">Đã tải lên</string>
+    <string name="hashtag_tab_all">Tất cả</string>
+    <string name="hashtag_tab_shorts">Shorts</string>
+    <string name="hashtag_page_subtitle">Video có hashtag này</string>
+    <string name="hashtag_error_title">Không thể tải hashtag này</string>
+    <string name="hashtag_empty_title">Không tìm thấy video</string>
+    <string name="hashtag_empty_body">Chưa có video cho hashtag này.</string>
+</resources>
