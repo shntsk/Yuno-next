@@ -18,7 +18,7 @@ val LocalHashtagOpener = staticCompositionLocalOf<(String) -> Unit> { {} }
 
 private const val LINK_TAG = "yuno-link"
 private val URL_PATTERN = Regex("""(?i)(?<![A-Za-z0-9_@])(?:(?:https?://|www\.)[^\s<>"']+|(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}(?:/[^\s<>"']*)?)""")
-private val HASHTAG_PATTERN = Regex("""(?<![\\p{L}\\p{N}_])#[\\p{L}\\p{N}_]+""")
+private val HASHTAG_PATTERN = Regex("""(?<![\p{L}\p{N}_])#[\p{L}\p{N}_]+""")
 private val HANDLE_PATTERN = Regex("""(?<![A-Za-z0-9._%+-])@[A-Za-z0-9][A-Za-z0-9._-]{1,28}[A-Za-z0-9]""")
 private val VIDEO_ID_PATTERN = Regex("^[A-Za-z0-9_-]{11}$")
 
