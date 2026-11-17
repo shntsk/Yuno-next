@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bar_tab_home">Beranda</string>
+    <string name="bar_tab_shorts">Shorts</string>
+    <string name="bar_tab_subscriptions">Subscription</string>
+    <string name="bar_tab_library">Koleksi</string>
+    <string name="player_description_title">Deskripsi</string>
+    <string name="player_description_close">Tutup deskripsi</string>
+    <string name="player_description_likes">Suka</string>
+    <string name="player_description_views">Penayangan</string>
+    <string name="player_description_uploaded">Diunggah</string>
+    <string name="hashtag_tab_all">Semua</string>
+    <string name="hashtag_tab_shorts">Shorts</string>
+    <string name="hashtag_page_subtitle">Video dengan tagar ini</string>
+    <string name="hashtag_error_title">Tidak dapat memuat tagar ini</string>
+    <string name="hashtag_empty_title">Video tidak ditemukan</string>
+    <string name="hashtag_empty_body">Belum ada video untuk tagar ini.</string>
+</resources>
