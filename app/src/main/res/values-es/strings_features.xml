@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bar_tab_home">Inicio</string>
+    <string name="bar_tab_shorts">Shorts</string>
+    <string name="bar_tab_subscriptions">Suscripciones</string>
+    <string name="bar_tab_library">Biblioteca</string>
+    <string name="player_description_title">Descripción</string>
+    <string name="player_description_close">Cerrar descripción</string>
+    <string name="player_description_likes">Me gusta</string>
+    <string name="player_description_views">Visualizaciones</string>
+    <string name="player_description_uploaded">Publicado</string>
+    <string name="hashtag_tab_all">Todo</string>
+    <string name="hashtag_tab_shorts">Shorts</string>
+    <string name="hashtag_page_subtitle">Videos con esta etiqueta</string>
+    <string name="hashtag_error_title">No se pudo cargar esta etiqueta</string>
+    <string name="hashtag_empty_title">No se encontraron videos</string>
+    <string name="hashtag_empty_body">Todavía no hay videos para esta etiqueta.</string>
+</resources>
