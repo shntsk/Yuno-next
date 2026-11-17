@@ -37,6 +37,8 @@ import org.schabi.newpipe.extractor.stream.StreamType
 import org.schabi.newpipe.extractor.stream.VideoStream
 import org.schabi.newpipe.extractor.localization.DateWrapper
 import java.io.IOException
+import java.text.DateFormat
+import java.util.Date
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
@@ -58,6 +60,8 @@ data class VideoItem(
     val uploaded: String?,
     /** The card's own "Not interested" / "Don't recommend channel" (signed-in feeds only, #16). */
     val feedback: CardFeedback? = null,
+    /** Exact upload instant; feed cards keep using [uploaded] for their own relative label. */
+    val uploadedAt: Instant? = null,
 )
 
 /** Tokens YouTube puts on a signed-in card for its feedback items; sent back as they are ([InnerTube.sendFeedback]). */
@@ -213,6 +217,7 @@ object YouTube {
                 durationSec = info.duration,
                 views = info.viewCount,
                 uploaded = uploadedText(info.textualUploadDate, info.uploadDate),
+                uploadedAt = info.uploadDate?.offsetDateTime()?.toInstant(),
             ),
             description = info.description?.let { d ->
                 if (d.type == Description.HTML) HtmlCompat.fromHtml(d.content, HtmlCompat.FROM_HTML_MODE_COMPACT).toString().trim()
@@ -272,6 +277,7 @@ object YouTube {
             durationSec = duration,
             views = viewCount,
             uploaded = uploadedText(textualUploadDate, uploadDate),
+            uploadedAt = uploadDate?.offsetDateTime()?.toInstant(),
         )
     }
 
@@ -302,6 +308,20 @@ object YouTube {
             s < 30 * 86_400 -> ago(s / (7 * 86_400), "week")
             s < 365 * 86_400 -> ago(s / (30 * 86_400), "month")
             else -> ago(s / (365 * 86_400), "year")
+        }
+    }
+
+    /**
+     * The watch page keeps relative labels through "3 days ago", then switches to a localized date.
+     * Feed cards still use the extractor's own [VideoItem.uploaded] text.
+     */
+    fun uploadedLabel(item: VideoItem, now: Instant = Instant.now()): String? {
+        val uploadedAt = item.uploadedAt ?: return item.uploaded
+        val ageSeconds = Duration.between(uploadedAt, now).seconds
+        return if (ageSeconds >= 0L && ageSeconds < 4L * 86_400L) {
+            relativeTime(uploadedAt, now)
+        } else {
+            DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date.from(uploadedAt))
         }
     }
 
