@@ -6,12 +6,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 
 val LocalVideoLinkOpener = staticCompositionLocalOf<(String) -> Unit> { {} }
 
@@ -32,7 +32,8 @@ fun LinkedText(
     val uriHandler = LocalUriHandler.current
     val openChannel = LocalChannelOpener.current
     val openVideo = LocalVideoLinkOpener.current
-    val linkColor = androidx.compose.material3.MaterialTheme.colorScheme.primary
+    val background = androidx.compose.material3.MaterialTheme.colorScheme.background
+    val linkColor = if (background.luminance() < 0.5f) Color(0xFF3EA6FF) else Color(0xFF065FD4)
     val annotated = remember(text, links, linkColor) {
         val ranges = buildList {
             links.forEach { link ->
@@ -62,11 +63,7 @@ fun LinkedText(
                 append(text.substring(cursor, range.start))
                 pushStringAnnotation(LINK_TAG, range.target)
                 pushStyle(
-                    SpanStyle(
-                        color = linkColor,
-                        fontWeight = FontWeight.Medium,
-                        textDecoration = TextDecoration.Underline,
-                    ),
+                    SpanStyle(color = linkColor),
                 )
                 append(text.substring(range.start, range.end))
                 pop()
