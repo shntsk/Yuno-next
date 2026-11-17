@@ -9,6 +9,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -139,6 +140,8 @@ class PlayerState(private val scope: CoroutineScope) {
     var fullscreen by mutableStateOf(false)
     /** Which bottom sheet is open over the player, if any. */
     var sheet by mutableStateOf<PlayerSheet?>(null)
+    /** Last scroll offset in the description panel, kept when navigating away from the player. */
+    var descriptionScroll by mutableIntStateOf(0)
 
     val comments = CommentsState(scope).apply {
         // NewPipe only knows chapters typed into the description; YouTube's auto chapters come
@@ -200,6 +203,7 @@ class PlayerState(private val scope: CoroutineScope) {
         Log.i("YunoTime", "open ${item.id}")
         if (startPlayback) Net.prewarmMediaConnection()
         current = item
+        descriptionScroll = 0
         details = null
         error = null
         botCheck = false
