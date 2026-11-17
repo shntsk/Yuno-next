@@ -53,6 +53,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -67,6 +68,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.layout.positionOnScreen
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -185,6 +187,7 @@ fun PlayerScreen(
     val details = state.details
     val top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    var stageBottomPx by remember(item.id) { mutableIntStateOf(0) }
     // Audio only (Derek, 2026-10-25): the open player has no video space at all — the stage
     // folds away (the picture fading and lifting as its height closes) and unfolds for video.
     // Only on the fully open player: swiping it down unfolds it again, so the thumbnail still
@@ -238,7 +241,9 @@ fun PlayerScreen(
         )
         Column(Modifier.fillMaxSize()) {
             Spacer(Modifier.height(top + StageTopGap))
-            Box(Modifier.zIndex(2f).onGloballyPositioned {
+            Box(Modifier.zIndex(2f).onGloballyPositioned { coordinates ->
+                val measuredBottom = (coordinates.positionInRoot().y + coordinates.size.height).roundToInt()
+                if (stageBottomPx != measuredBottom) stageBottomPx = measuredBottom
                 if (dock.offset() != null) dock.attached = true
             }) {
                 VideoStage(
@@ -361,31 +366,32 @@ fun PlayerScreen(
         // collapsing, touches must still fall through to the mini-player).
         if (interactive) BottomGestureGuard(Modifier.align(Alignment.BottomCenter))
 
-        // Comments open as a panel whose top sits just under the video.
+        // Use the measured stage edge so the panel never starts above the actual video.
+        val fallbackScreenW = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp.dp
+        val estimatedVideoBottom = top + StageTopGap + (fallbackScreenW - StageSideGap * 2) / state.stageAspect
+        val videoBottom = if (stageBottomPx > 0) {
+            with(LocalDensity.current) { stageBottomPx.toDp() }
+        } else estimatedVideoBottom
+        val panelTop = videoBottom + 10.dp
+
         if (state.sheet == PlayerSheet.Comments) {
-            val screenW = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp.dp
-            val videoBottom = top + StageTopGap + (screenW - StageSideGap * 2) / state.stageAspect
             CommentsPanel(
                 state.comments,
-                partialTop = videoBottom + 10.dp,
+                partialTop = panelTop,
                 onClose = { state.sheet = null },
             )
         }
         if (state.sheet == PlayerSheet.Transcript) {
-            val screenW = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp.dp
-            val videoBottom = top + StageTopGap + (screenW - StageSideGap * 2) / state.stageAspect
             TranscriptPanel(
                 state,
-                partialTop = videoBottom + 10.dp,
+                partialTop = panelTop,
                 onClose = { state.sheet = null },
             )
         }
         if (state.sheet == PlayerSheet.Description) {
-            val screenW = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp.dp
-            val videoBottom = top + StageTopGap + (screenW - StageSideGap * 2) / state.stageAspect
             DescriptionPanel(
                 state,
-                partialTop = videoBottom + 10.dp,
+                partialTop = panelTop,
                 onClose = { state.sheet = null },
             )
         }
