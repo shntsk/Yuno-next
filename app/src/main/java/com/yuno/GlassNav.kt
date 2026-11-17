@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextOverflow
@@ -140,12 +141,13 @@ fun GlassNavBar(
                 if (!isSelected) haptics.select()
                 currentOnTabSelected(tab)
             }
+            val label = stringResource(tab.labelRes)
             tab(
                 key = tab,
                 icon = {
                     Icon(
                         imageVector = tab.icon,
-                        contentDescription = tab.label,
+                        contentDescription = label,
                         tint = tint,
                         modifier = Modifier.size(TabIconSize).graphicsLayer {
                             scaleX = tab.iconScale
@@ -155,7 +157,7 @@ fun GlassNavBar(
                 },
                 title = {
                     Text(
-                        text = tab.label,
+                        text = label,
                         style = tabLabelStyle(),
                         color = tint,
                         maxLines = 1,
