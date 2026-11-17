@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bar_tab_home">Ana Sayfa</string>
+    <string name="bar_tab_shorts">Shorts</string>
+    <string name="bar_tab_subscriptions">Abonelikler</string>
+    <string name="bar_tab_library">Kitaplık</string>
+    <string name="player_description_title">Açıklama</string>
+    <string name="player_description_close">Açıklamayı kapat</string>
+    <string name="player_description_likes">Beğeniler</string>
+    <string name="player_description_views">Görüntülemeler</string>
+    <string name="player_description_uploaded">Yüklenme</string>
+    <string name="hashtag_tab_all">Tümü</string>
+    <string name="hashtag_tab_shorts">Shorts</string>
+    <string name="hashtag_page_subtitle">Bu hashtag ile videolar</string>
+    <string name="hashtag_error_title">Hashtag yüklenemedi</string>
+    <string name="hashtag_empty_title">Video bulunamadı</string>
+    <string name="hashtag_empty_body">Bu hashtag için henüz video yok.</string>
+</resources>
