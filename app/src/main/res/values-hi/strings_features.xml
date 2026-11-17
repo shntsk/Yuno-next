@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bar_tab_home">होम</string>
+    <string name="bar_tab_shorts">Shorts</string>
+    <string name="bar_tab_subscriptions">सदस्यताएँ</string>
+    <string name="bar_tab_library">लाइब्रेरी</string>
+    <string name="player_description_title">विवरण</string>
+    <string name="player_description_close">विवरण बंद करें</string>
+    <string name="player_description_likes">पसंद</string>
+    <string name="player_description_views">व्यूज़</string>
+    <string name="player_description_uploaded">अपलोड किया गया</string>
+    <string name="hashtag_tab_all">सभी</string>
+    <string name="hashtag_tab_shorts">Shorts</string>
+    <string name="hashtag_page_subtitle">इस हैशटैग वाले वीडियो</string>
+    <string name="hashtag_error_title">यह हैशटैग लोड नहीं हो सका</string>
+    <string name="hashtag_empty_title">कोई वीडियो नहीं मिला</string>
+    <string name="hashtag_empty_body">इस हैशटैग के लिए अभी कोई वीडियो नहीं है।</string>
+</resources>
