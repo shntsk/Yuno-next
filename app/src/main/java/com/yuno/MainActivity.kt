@@ -159,11 +159,11 @@ class MainActivity : ComponentActivity() {
  * [YunoIcons.TabLibrary] cover three quarters - so [iconScale] shrinks the
  * other three to Home's optical area instead of letting them run to the edges.
  */
-enum class Tab(val label: String, val icon: ImageVector, val selectedIcon: ImageVector, val iconScale: Float = 1f) {
-    Home("Home", YunoIcons.Home, YunoIcons.Home),
-    Shorts("Shorts", SfIcons.Shorts, SfIcons.Shorts, 0.85f),
-    Subscriptions("Subscriptions", SfIcons.Subscriptions, SfIcons.Subscriptions, 1.08f),
-    Library("Library", YunoIcons.TabLibrary, YunoIcons.TabLibrary, 0.84f),
+enum class Tab(val labelRes: Int, val icon: ImageVector, val selectedIcon: ImageVector, val iconScale: Float = 1f) {
+    Home(R.string.bar_tab_home, YunoIcons.Home, YunoIcons.Home),
+    Shorts(R.string.bar_tab_shorts, SfIcons.Shorts, SfIcons.Shorts, 0.85f),
+    Subscriptions(R.string.bar_tab_subscriptions, SfIcons.Subscriptions, SfIcons.Subscriptions, 1.08f),
+    Library(R.string.bar_tab_library, YunoIcons.TabLibrary, YunoIcons.TabLibrary, 0.84f),
 }
 
 /** Backdrop the nav samples for liquid glass. */
@@ -207,6 +207,7 @@ fun YunoApp() {
     val libraryPull = remember { BarPullRefreshState() }
     val channelStates = remember { mutableMapOf<String, ChannelState>() }
     val playlistFeeds = remember { mutableMapOf<String, FeedState>() }
+    val hashtagStates = remember { mutableMapOf<String, HashtagState>() }
     val pageStates = rememberSaveableStateHolder()
     val pageKeysSeen = remember { mutableSetOf<String>() }
     var tab by rememberSaveable { mutableStateOf(Tab.Home) }
@@ -344,6 +345,12 @@ fun YunoApp() {
         navigator.push(AppRoute.Channel(url))
     }
 
+    fun showHashtag(tag: String) {
+        player.expanded = false
+        showNowPlaying = false
+        navigator.push(AppRoute.Hashtag(tag))
+    }
+
     fun openShorts(list: ShortsList) {
         shortsBackTo = (navigator.visibleRoute() as? AppRoute.Channel)?.url
         shortsListOnTab = tab == Tab.Shorts
@@ -468,6 +475,7 @@ fun YunoApp() {
                 optionsFor = video
             },
             LocalChannelOpener provides { url -> showChannel(url) },
+            LocalHashtagOpener provides { tag -> showHashtag(tag) },
             LocalVideoLinkOpener provides { id ->
                 player.open(
                     VideoItem(
@@ -576,6 +584,11 @@ fun YunoApp() {
                         onOpenShorts = ::openShorts,
                         onOpenPlaylist = { navigator.push(AppRoute.Playlist(it)) },
                         onMessage = { player.actionMessage = it },
+                    )
+                    is AppRoute.Hashtag -> HashtagScreen(
+                        hashtagStates.getOrPut(pageRoute.tag) { HashtagState(pageRoute.tag, scope) },
+                        contentPadding,
+                        onOpen = { v -> if (tab == Tab.Shorts) tab = shortsFrom; player.open(v) },
                     )
                 }
             }
