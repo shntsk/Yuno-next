@@ -6,20 +6,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.unit.sp
 
 val LocalVideoLinkOpener = staticCompositionLocalOf<(String) -> Unit> { {} }
 
 private const val LINK_TAG = "yuno-link"
-private val URL_PATTERN = Regex("""(?i)\\b(?:https?://|www\\.)[^\\s<>"']+""")
+private val URL_PATTERN = Regex("""(?i)\b(?:https?://|www\.)[^\s<>"']+""")
 private val HANDLE_PATTERN = Regex("""(?<![A-Za-z0-9._%+-])@[A-Za-z0-9][A-Za-z0-9._-]{1,28}[A-Za-z0-9]""")
 private val VIDEO_ID_PATTERN = Regex("^[A-Za-z0-9_-]{11}$")
 
@@ -114,16 +111,16 @@ private fun resolveLink(raw: String): LinkDestination {
     val youtubeHost = host == "youtu.be" || host == "youtube.com" || host.endsWith(".youtube.com")
 
     if (youtubeHost) {
+        val first = path.firstOrNull().orEmpty()
         val videoId = when {
-            host == "youtu.be" -> path.firstOrNull()
-            path.firstOrNull() == "watch" -> uri.getQueryParameter("v")
-            path.firstOrNull() in setOf("shorts", "live", "embed", "v") -> path.getOrNull(1)
+            host == "youtu.be" -> first
+            first == "watch" -> uri.getQueryParameter("v")
+            first in setOf("shorts", "live", "embed", "v") -> path.getOrNull(1)
             else -> null
         }?.takeIf { VIDEO_ID_PATTERN.matches(it) }
         if (videoId != null) return LinkDestination.Video(videoId)
 
-        val first = path.firstOrNull().orEmpty()
-        if (first.startsWith("@") && first.length > 1 ||
+        if ((first.startsWith("@") && first.length > 1) ||
             first in setOf("channel", "c", "user")
         ) return LinkDestination.Channel(url)
     }
