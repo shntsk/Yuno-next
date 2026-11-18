@@ -24,7 +24,7 @@
 <string name="video_pip_off">Il Picture in picture è disattivato per Yuno nelle Impostazioni.</string>
 
     <!-- Quality: automatic. Also the start of the quality pill on the video ("Auto · 720p"): small pill, keep short. -->
-    <string name="video_quality_auto">Auto</string>
+    <string name="video_quality_auto">Automatica</string>
     <!-- Subtitle of the Auto row in the quality sheet. -->
     <string name="video_quality_auto_best">La migliore fino a 1080p</string>
     <!-- Appended to the Auto row's subtitle after " · "; %1$s = a resolution like "720p". -->
@@ -45,9 +45,9 @@
     <string name="video_drop_speed">VELOCITÀ</string>
 
     <!-- Captions card: row that turns captions off. -->
-    <string name="video_captions_off">Off</string>
+    <string name="video_captions_off">Disattivati</string>
     <!-- Captions card: small grey tags after a language name. -->
-    <string name="video_captions_tag_auto">auto</string>
+    <string name="video_captions_tag_auto">automatico</string>
     <string name="video_captions_tag_downloading">download in corso</string>
     <string name="video_captions_tag_translated">tradotti</string>
     <string name="video_captions_tag_download">da scaricare</string>
