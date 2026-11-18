@@ -2,10 +2,10 @@
 <resources>
     <string name="onboarding_next">İleri</string>
     <string name="onboarding_skip">Atla</string>
-    <string name="onboarding_welcome_title">Yuno'ya hoş geldin</string>
+    <string name="onboarding_welcome_title">Yuno\'ya hoş geldin</string>
     <string name="onboarding_welcome_subtitle">Reklamsız YouTube deneyimin.</string>
     <string name="onboarding_feature_no_ads_title">Reklam yok</string>
-    <string name="onboarding_feature_no_ads_body">YouTube videolarını reklamlar veya reklam SDK'sı olmadan oynat.</string>
+    <string name="onboarding_feature_no_ads_body">YouTube videolarını reklamlar veya reklam SDK\'sı olmadan oynat.</string>
     <string name="onboarding_feature_background_audio_title">Arka planda ses</string>
     <string name="onboarding_feature_background_audio_body">Telefonu kilitle veya başka bir uygulamaya geç — ses çalmaya devam eder.</string>
     <string name="onboarding_feature_full_sync_title">İsteğe bağlı tam senkronizasyon</string>
@@ -18,7 +18,7 @@
     <string name="onboarding_account_risk_notice">Google, resmi olmayan uygulamaları şartlarına aykırı kabul eder ve bunları kullanan hesapları askıya alabilir. İkincil bir Google hesabı kullanmak bu riski ana hesabından uzak tutar.</string>
     <string name="onboarding_account_skip">Bu adımı atlayabilirsin — oturum açmadan da her şey çalışır.</string>
     <string name="onboarding_ready_title">Hazırsın</string>
-    <string name="onboarding_ready_body">Videoları ara, oynat ve sıraya ekle. Görünümü, Shorts'u ve SponsorBlock'u değiştirmek için hesap menüsünü istediğin zaman aç.</string>
+    <string name="onboarding_ready_body">Videoları ara, oynat ve sıraya ekle. Görünümü, Shorts\'u ve SponsorBlock\'u değiştirmek için hesap menüsünü istediğin zaman aç.</string>
     <string name="ui_history_signed_out_body">Bu telefonda izlediğin videolar burada görünür.</string>
     <string name="player_sign_in_to_like">Videoları beğenmek için giriş yap.</string>
     <string name="player_sign_in_to_subscribe">Abone olmak için giriş yap.</string>
