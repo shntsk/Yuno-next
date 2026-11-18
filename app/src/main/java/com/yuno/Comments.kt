@@ -111,6 +111,8 @@ import kotlin.math.roundToInt
 class CommentsState(private val scope: CoroutineScope) {
     /** The watch page the first comments come from also carries the video's chapters. */
     var onChapters: ((videoId: String, chapters: List<Chapter>) -> Unit)? = null
+    /** Seek the current video when a timestamp in a comment is tapped. */
+    var onTimestampClick: ((positionMs: Long) -> Unit)? = null
 
     private var videoId: String? = null
     var comments by mutableStateOf<List<Comment>>(emptyList())
@@ -645,6 +647,7 @@ private fun CommentRow(comment: Comment, state: CommentsState, isReply: Boolean 
             Spacer(Modifier.height(3.dp))
             LinkedText(
                 text = comment.text,
+                onTimestampClick = state.onTimestampClick,
                 style = androidx.compose.material3.LocalTextStyle.current.copy(
                     color = c.onSurface,
                     fontSize = 14.sp,
