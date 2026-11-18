@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_chip_all">すべて</string>
+    <string name="home_chip_music">音楽</string>
+    <string name="home_chip_gaming">ゲーム</string>
+    <string name="home_chip_mixes">ミックス</string>
+    <string name="home_chip_podcasts">ポッドキャスト</string>
+    <string name="home_chip_sports">スポーツ</string>
+    <string name="home_chip_news">ニュース</string>
+    <string name="home_chip_recently_uploaded">最近アップロード</string>
+    <string name="home_chip_watched">視聴済み</string>
+    <string name="home_chip_unwatched">未視聴</string>
+    <string name="home_chip_new_to_you">あなたへの新着</string>
+    <string name="home_chip_comedy">コメディ</string>
+    <string name="home_chip_education">教育</string>
+    <string name="home_chip_science_technology">科学・テクノロジー</string>
+    <string name="home_chip_travel">旅行</string>
+    <string name="home_chip_fashion_beauty">ファッション・美容</string>
+    <string name="home_chip_cooking">料理</string>
+    <string name="home_chip_entertainment">エンターテイメント</string>
+    <string name="home_error_recommendations">おすすめを読み込めませんでした。</string>
+</resources>
