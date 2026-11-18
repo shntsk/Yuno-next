@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_next">Suivant</string>
+    <string name="onboarding_skip">Ignorer</string>
+    <string name="onboarding_welcome_title">Bienvenue sur Yuno</string>
+    <string name="onboarding_welcome_subtitle">Ton YouTube, sans pub.</string>
+    <string name="onboarding_feature_no_ads_title">Pas de publicité</string>
+    <string name="onboarding_feature_no_ads_body">Regarde n’importe quelle vidéo YouTube sans publicité ni SDK publicitaire.</string>
+    <string name="onboarding_feature_background_audio_title">Audio en arrière-plan</string>
+    <string name="onboarding_feature_background_audio_body">Verrouille ton téléphone ou passe à une autre appli : le son continue.</string>
+    <string name="onboarding_feature_full_sync_title">Synchronisation complète facultative</string>
+    <string name="onboarding_feature_full_sync_body">Connecte-toi pour synchroniser l’accueil, les abonnements, les mentions J’aime et l’historique, ou reste déconnecté.</string>
+    <string name="onboarding_make_yours_title">Personnalise ton expérience</string>
+    <string name="onboarding_make_yours_body">Choisis une apparence. Tu peux la modifier à tout moment dans le menu du compte.</string>
+    <string name="onboarding_signed_in_title">Connexion réussie</string>
+    <string name="onboarding_connect_account_title">Connecter ton compte</string>
+    <string name="onboarding_signed_in_body">L’accueil, les abonnements, l’historique et les playlists seront synchronisés sur ce téléphone.</string>
+    <string name="onboarding_account_risk_notice">Google considère les applications non officielles comme contraires à ses conditions et peut suspendre les comptes qui les utilisent. Un compte Google secondaire permet de protéger ton compte principal de ce risque.</string>
+    <string name="onboarding_account_skip">Tu peux ignorer cette étape : tout fonctionne aussi sans connexion.</string>
+    <string name="onboarding_ready_title">Tout est prêt</string>
+    <string name="onboarding_ready_body">Recherche, lis et mets des vidéos en file d’attente. Ouvre le menu du compte à tout moment pour modifier l’apparence, Shorts et SponsorBlock.</string>
+    <string name="ui_history_signed_out_body">Les vidéos que tu regardes sur ce téléphone apparaîtront ici.</string>
+    <string name="player_sign_in_to_like">Connecte-toi pour aimer des vidéos.</string>
+    <string name="player_sign_in_to_subscribe">Connecte-toi pour t’abonner.</string>
+    <string name="player_sign_in_to_save">Connecte-toi pour enregistrer des vidéos.</string>
+    <string name="player_sign_in_to_playlist">Connecte-toi pour enregistrer des vidéos dans une playlist.</string>
+    <string name="player_watch_later_update_failed">Impossible de mettre à jour « À regarder plus tard ».</string>
+    <plurals name="player_subscriber_count">
+        <item quantity="one">%1$s abonné</item>
+        <item quantity="other">%1$s abonnés</item>
+    </plurals>
+    <string name="app_subscribe_first">Abonne-toi d’abord à cette chaîne, puis active la cloche.</string>
+    <string name="settings_liquid_glass">Liquid Glass</string>
+    <string name="settings_liquid_glass_line">Barre givrée et réfractive qui échantillonne la page en arrière-plan</string>
+</resources>
