@@ -380,7 +380,7 @@ fun VideoRow(video: VideoItem, onClick: () -> Unit, trailing: (@Composable () ->
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                listOfNotNull(video.channel.ifBlank { null }, video.views.takeIf { it >= 0 }?.let { "${formatCount(it)} views" }).joinDots(),
+                listOfNotNull(video.channel.ifBlank { null }, video.views.takeIf { it >= 0 }?.let { plural(R.plurals.ui_video_views, it, formatCount(it)) }).joinDots(),
                 color = c.onSurfaceVariant,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -515,14 +515,14 @@ fun ChannelNameWithBadge(
         )
         if (verified) {
             Spacer(Modifier.width(5.dp))
-            Icon(SfIcons.Verified, "Verified", Modifier.size(badge), tint = c.onSurfaceVariant)
+            Icon(SfIcons.Verified, str(R.string.ui_verified), Modifier.size(badge), tint = c.onSurfaceVariant)
         }
     }
 }
 
 fun channelStatLine(subscribers: Long, videoCount: Long): String = listOfNotNull(
-    subscribers.takeIf { it > 0 }?.let { "${formatStatCount(it)} subscribers" },
-    videoCount.takeIf { it > 0 }?.let { "${formatStatCount(it)} videos" },
+    subscribers.takeIf { it > 0 }?.let { plural(R.plurals.player_subscriber_count, it, formatStatCount(it)) },
+    videoCount.takeIf { it > 0 }?.let { plural(R.plurals.ui_video_count, it, formatStatCount(it)) },
 ).joinToString(" · ")
 
 private fun trimmed(v: Double): String =
