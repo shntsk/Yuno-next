@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_next">Siguiente</string>
+    <string name="onboarding_skip">Omitir</string>
+    <string name="onboarding_welcome_title">Te damos la bienvenida a Yuno</string>
+    <string name="onboarding_welcome_subtitle">Tu YouTube, sin anuncios.</string>
+    <string name="onboarding_feature_no_ads_title">Sin anuncios</string>
+    <string name="onboarding_feature_no_ads_body">Reproduce cualquier vídeo de YouTube sin anuncios ni SDK publicitario.</string>
+    <string name="onboarding_feature_background_audio_title">Audio en segundo plano</string>
+    <string name="onboarding_feature_background_audio_body">Bloquea el teléfono o cambia de aplicación: el audio seguirá reproduciéndose.</string>
+    <string name="onboarding_feature_full_sync_title">Sincronización completa opcional</string>
+    <string name="onboarding_feature_full_sync_body">Inicia sesión para sincronizar Inicio, suscripciones, Me gusta e historial, o continúa sin iniciar sesión.</string>
+    <string name="onboarding_make_yours_title">Hazlo tuyo</string>
+    <string name="onboarding_make_yours_body">Elige un aspecto. Puedes cambiarlo cuando quieras desde el menú de cuenta.</string>
+    <string name="onboarding_signed_in_title">Has iniciado sesión</string>
+    <string name="onboarding_connect_account_title">Conecta tu cuenta</string>
+    <string name="onboarding_signed_in_body">Inicio, suscripciones, historial y listas de reproducción se sincronizarán en este teléfono.</string>
+    <string name="onboarding_account_risk_notice">Google considera que las aplicaciones no oficiales incumplen sus condiciones y puede suspender las cuentas que las usen. Una cuenta de Google secundaria mantiene ese riesgo lejos de tu cuenta principal.</string>
+    <string name="onboarding_account_skip">Puedes omitir este paso: todo seguirá funcionando sin iniciar sesión.</string>
+    <string name="onboarding_ready_title">Ya está todo listo</string>
+    <string name="onboarding_ready_body">Busca, reproduce y añade vídeos a la cola. Abre el menú de cuenta cuando quieras para cambiar la apariencia, Shorts y SponsorBlock.</string>
+    <string name="ui_history_signed_out_body">Los vídeos que veas en este teléfono aparecerán aquí.</string>
+    <string name="player_sign_in_to_like">Inicia sesión para indicar que te gustan los vídeos.</string>
+    <string name="player_sign_in_to_subscribe">Inicia sesión para suscribirte.</string>
+    <string name="player_sign_in_to_save">Inicia sesión para guardar vídeos.</string>
+    <string name="player_sign_in_to_playlist">Inicia sesión para guardar vídeos en una lista de reproducción.</string>
+    <string name="player_watch_later_update_failed">No se pudo actualizar Ver más tarde.</string>
+    <plurals name="player_subscriber_count">
+        <item quantity="one">%1$s suscriptor</item>
+        <item quantity="other">%1$s suscriptores</item>
+    </plurals>
+    <string name="app_subscribe_first">Suscríbete primero a este canal y después activa la campana.</string>
+    <string name="settings_liquid_glass">Liquid Glass</string>
+    <string name="settings_liquid_glass_line">Barra translúcida y refractiva que toma los colores de la página que hay detrás</string>
+</resources>
