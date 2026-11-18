@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_chip_all">Tout</string>
+    <string name="home_chip_music">Musique</string>
+    <string name="home_chip_gaming">Jeux vidéo</string>
+    <string name="home_chip_mixes">Mix</string>
+    <string name="home_chip_podcasts">Podcasts</string>
+    <string name="home_chip_sports">Sports</string>
+    <string name="home_chip_news">Actualités</string>
+    <string name="home_chip_recently_uploaded">Ajoutées récemment</string>
+    <string name="home_chip_watched">Regardées</string>
+    <string name="home_chip_unwatched">Non regardées</string>
+    <string name="home_chip_new_to_you">Nouveau pour vous</string>
+    <string name="home_chip_comedy">Humour</string>
+    <string name="home_chip_education">Éducation</string>
+    <string name="home_chip_science_technology">Sciences et technologie</string>
+    <string name="home_chip_travel">Voyages</string>
+    <string name="home_chip_fashion_beauty">Mode et beauté</string>
+    <string name="home_chip_cooking">Cuisine</string>
+    <string name="home_chip_entertainment">Divertissement</string>
+    <string name="home_error_recommendations">Impossible de charger les recommandations.</string>
+</resources>
