@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_next">आगे</string>
+    <string name="onboarding_skip">छोड़ें</string>
+    <string name="onboarding_welcome_title">Yuno में आपका स्वागत है</string>
+    <string name="onboarding_welcome_subtitle">आपका YouTube, बिना विज्ञापनों के।</string>
+    <string name="onboarding_feature_no_ads_title">विज्ञापन नहीं</string>
+    <string name="onboarding_feature_no_ads_body">YouTube से कोई भी वीडियो विज्ञापनों या विज्ञापन SDK के बिना चलाएँ।</string>
+    <string name="onboarding_feature_background_audio_title">बैकग्राउंड ऑडियो</string>
+    <string name="onboarding_feature_background_audio_body">फ़ोन लॉक करें या ऐप बदलें — आवाज़ चलती रहेगी।</string>
+    <string name="onboarding_feature_full_sync_title">वैकल्पिक पूर्ण सिंक</string>
+    <string name="onboarding_feature_full_sync_body">Home, सदस्यताओं, पसंद और इतिहास को सिंक करने के लिए साइन इन करें — या बिना साइन इन किए रहें।</string>
+    <string name="onboarding_make_yours_title">इसे अपना बनाएँ</string>
+    <string name="onboarding_make_yours_body">कोई रूप चुनें। इसे आप कभी भी अकाउंट मेन्यू में बदल सकते हैं।</string>
+    <string name="onboarding_signed_in_title">आप साइन इन हैं</string>
+    <string name="onboarding_connect_account_title">अपना अकाउंट कनेक्ट करें</string>
+    <string name="onboarding_signed_in_body">इस फ़ोन पर Home, सदस्यताएँ, इतिहास और प्लेलिस्ट सिंक होंगी।</string>
+    <string name="onboarding_account_risk_notice">Google अनौपचारिक ऐप्स को अपनी शर्तों के विरुद्ध मानता है और उनका उपयोग करने वाले खातों को निलंबित कर सकता है। अलग Google अकाउंट इस्तेमाल करने से आपका मुख्य अकाउंट सुरक्षित रहेगा।</string>
+    <string name="onboarding_account_skip">आप इसे छोड़ सकते हैं — बिना साइन इन किए भी सब कुछ काम करेगा।</string>
+    <string name="onboarding_ready_title">आप तैयार हैं</string>
+    <string name="onboarding_ready_body">वीडियो खोजें, चलाएँ और कतार में जोड़ें। रूप, Shorts और SponsorBlock बदलने के लिए कभी भी अकाउंट मेन्यू खोलें।</string>
+    <string name="ui_history_signed_out_body">इस फ़ोन पर आपके देखे गए वीडियो यहाँ दिखाई देंगे।</string>
+    <string name="player_sign_in_to_like">वीडियो पसंद करने के लिए साइन इन करें।</string>
+    <string name="player_sign_in_to_subscribe">सब्सक्राइब करने के लिए साइन इन करें।</string>
+    <string name="player_sign_in_to_save">वीडियो सेव करने के लिए साइन इन करें।</string>
+    <string name="player_sign_in_to_playlist">प्लेलिस्ट में वीडियो सेव करने के लिए साइन इन करें।</string>
+    <string name="player_watch_later_update_failed">Watch later अपडेट नहीं हो सका।</string>
+    <plurals name="player_subscriber_count">
+        <item quantity="one">%1$s सदस्य</item>
+        <item quantity="other">%1$s सदस्य</item>
+    </plurals>
+    <string name="app_subscribe_first">पहले इस चैनल को सब्सक्राइब करें, फिर घंटी चालू करें।</string>
+    <string name="settings_liquid_glass">लिक्विड ग्लास</string>
+    <string name="settings_liquid_glass_line">फ्रॉस्टेड और प्रकाश को मोड़ने वाला बार, जो पीछे के पेज के रंगों का उपयोग करता है</string>
+</resources>
