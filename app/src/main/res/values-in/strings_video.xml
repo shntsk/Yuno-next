@@ -11,7 +11,7 @@
     <string name="video_playback_speed">Kecepatan pemutaran</string>
     <string name="video_captions">Subtitel</string>
     <string name="video_quality">Kualitas</string>
-    <string name="video_pip">Picture-in-picture</string>
+    <string name="video_pip">Gambar dalam gambar</string>
     <string name="video_next">Berikutnya</string>
     <string name="video_fullscreen">Layar penuh</string>
     <string name="video_exit_fullscreen">Keluar dari layar penuh</string>
