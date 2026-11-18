@@ -308,7 +308,7 @@ fun PlayerScreen(
                             Column(Modifier.weight(1f)) {
                                 Text(item.channel, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 details?.subscribers?.takeIf { it > 0 }?.let {
-                                    Text("${formatCount(it)} subscribers", color = c.onSurfaceVariant, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                    Text(plural(R.plurals.player_subscriber_count, it, formatCount(it)), color = c.onSurfaceVariant, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                                 }
                             }
                             }
@@ -726,7 +726,7 @@ private fun SubscribeButton(subscribed: Boolean, onClick: () -> Unit) {
             Spacer(Modifier.width(6.dp))
         }
         Text(
-            if (subscribed) "Subscribed" else "Subscribe",
+            if (subscribed) stringResource(R.string.app_subscribed) else stringResource(R.string.app_subscribe),
             color = if (subscribed) c.onSecondaryContainer else c.surface,
             fontWeight = FontWeight.ExtraBold, fontSize = 14.sp,
         )
@@ -754,11 +754,11 @@ private fun PlayerActions(state: PlayerState) {
         val item = state.current
         ActionPill(
             icon = SfIcons.Share,
-            label = "Share",
+            label = stringResource(R.string.player_share),
             active = false,
             flourish = null,
             shape = RoundedCornerShape(22.dp),
-            description = "Share",
+            description = stringResource(R.string.player_share),
         ) { item?.let { shareLink(context, "https://youtu.be/${it.id}", it.title) } }
     }
 }
@@ -788,7 +788,7 @@ private fun AccountActions(state: PlayerState) {
             flourish = Flourish.Pop,
             labelRollsUp = rising,
             shape = RoundedCornerShape(topStart = 22.dp, bottomStart = 22.dp, topEnd = 8.dp, bottomEnd = 8.dp),
-            description = "Like",
+            description = stringResource(R.string.player_like),
         ) { state.setLike(LikeStatus.Like) }
         ActionPill(
             icon = if (like == LikeStatus.Dislike) SfIcons.ThumbDownFill else SfIcons.ThumbDown,
@@ -796,25 +796,25 @@ private fun AccountActions(state: PlayerState) {
             active = like == LikeStatus.Dislike,
             flourish = Flourish.Droop,
             shape = RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp, topEnd = 22.dp, bottomEnd = 22.dp),
-            description = "Dislike",
+            description = stringResource(R.string.player_dislike),
         ) { state.setLike(LikeStatus.Dislike) }
     }
     ActionPill(
         icon = if (state.inWatchLater) SfIcons.Clock else YunoIcons.Clock,
-        label = if (state.inWatchLater) "Saved" else "Save",
+        label = if (state.inWatchLater) stringResource(R.string.ui_saved) else stringResource(R.string.ui_save),
         active = state.inWatchLater,
         flourish = Flourish.Drop,
         shape = RoundedCornerShape(22.dp),
-        description = "Save to Watch later",
+        description = stringResource(R.string.ui_save_to_watch_later),
     ) { state.toggleWatchLater() }
     // Any of the account's playlists (GitHub issue #12).
     ActionPill(
         icon = SfIcons.LibraryAdd,
-        label = "Playlist",
+        label = stringResource(R.string.player_playlist),
         active = false,
         flourish = null,
         shape = RoundedCornerShape(22.dp),
-        description = "Save to playlist",
+        description = stringResource(R.string.player_save_to_playlist),
     ) { state.current?.let(state::openPlaylists) }
 }
 
