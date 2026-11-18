@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_chip_all">Semua</string>
+    <string name="home_chip_music">Musik</string>
+    <string name="home_chip_gaming">Game</string>
+    <string name="home_chip_mixes">Mix</string>
+    <string name="home_chip_podcasts">Podcast</string>
+    <string name="home_chip_sports">Olahraga</string>
+    <string name="home_chip_news">Berita</string>
+    <string name="home_chip_recently_uploaded">Baru diupload</string>
+    <string name="home_chip_watched">Ditonton</string>
+    <string name="home_chip_unwatched">Belum ditonton</string>
+    <string name="home_chip_new_to_you">Baru untuk Anda</string>
+    <string name="home_chip_comedy">Komedi</string>
+    <string name="home_chip_education">Pendidikan</string>
+    <string name="home_chip_science_technology">Sains &amp; teknologi</string>
+    <string name="home_chip_travel">Perjalanan</string>
+    <string name="home_chip_fashion_beauty">Mode &amp; kecantikan</string>
+    <string name="home_chip_cooking">Memasak</string>
+    <string name="home_chip_entertainment">Hiburan</string>
+    <string name="home_error_recommendations">Rekomendasi gagal dimuat.</string>
+</resources>
