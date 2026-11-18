@@ -345,7 +345,7 @@ object InnerTube {
         if (page.videos.isNotEmpty() || next != null) return@withContext page
         // NewPipe search as a last resort (same path as the Search tab).
         val videos = YouTube.search(GUEST_HOME_QUERY)
-        if (videos.isEmpty()) throw IOException("Couldn't load recommendations.")
+        if (videos.isEmpty()) throw IOException(str(R.string.home_error_recommendations))
         FeedPage(videos, null)
     }
 
@@ -628,7 +628,7 @@ object InnerTube {
      */
     suspend fun shorts(token: String? = null): FeedPage = withContext(Dispatchers.IO) {
         if (token != null) return@withContext parseShorts(postAny("reel/reel_watch_sequence", JSONObject().put("sequenceParams", token)))
-        val seed = shortsSeed() ?: throw IOException("YouTube didn't offer any Shorts right now.")
+        val seed = shortsSeed() ?: throw IOException(str(R.string.shorts_none_offered))
         val page = parseShorts(postAny("reel/reel_watch_sequence", JSONObject().put("sequenceParams", reelSequenceParams(seed))))
         page.copy(videos = listOf(shortItem(seed, null)) + page.videos.filter { it.id != seed })
     }
