@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ui_save">Guardar</string>
+    <plurals name="ui_video_views">
+        <item quantity="one">%1$s visualización</item>
+        <item quantity="other">%1$s visualizaciones</item>
+    </plurals>
+</resources>
