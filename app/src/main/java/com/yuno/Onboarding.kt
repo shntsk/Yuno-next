@@ -214,7 +214,7 @@ fun OnboardingScreen(onFinished: () -> Unit, onSignIn: () -> Unit) {
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(SfIcons.ArrowBack, null, tint = c.onSurfaceVariant)
-                            Text("Back", color = c.onSurfaceVariant, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Text(stringResource(R.string.ui_back), color = c.onSurfaceVariant, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         }
                     }
                     Box(
