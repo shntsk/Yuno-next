@@ -63,6 +63,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -403,7 +404,7 @@ fun PageTopBar(
                     .pressable(onClick = onBack),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(SfIcons.ArrowBack, contentDescription = "Back", tint = iconTint)
+                Icon(SfIcons.ArrowBack, contentDescription = stringResource(R.string.ui_back), tint = iconTint)
             }
         }
         val leading = if (onBack != null) PageGutter + TopControl + AccessoryGap else PageGutter
@@ -519,7 +520,7 @@ fun HeaderActions(onSearch: () -> Unit, onAccount: () -> Unit) {
     val glass = LocalLiquidGlassEnabled.current && isGlassSupported()
     val tint = if (glass) glassContentColor() else MaterialTheme.colorScheme.onSurface
     Box(Modifier.size(TopControl).pressable(onClick = onSearch), contentAlignment = Alignment.Center) {
-        Icon(SfIcons.Search, contentDescription = "Search", tint = tint, modifier = Modifier.size(24.dp))
+        Icon(SfIcons.Search, contentDescription = stringResource(R.string.ui_search_title), tint = tint, modifier = Modifier.size(24.dp))
     }
     AccountAction(onAccount)
 }
@@ -541,7 +542,7 @@ fun AccountAction(onClick: () -> Unit) {
             ) {
                 Icon(
                     SfIcons.Person,
-                    contentDescription = "Sign in",
+                    contentDescription = stringResource(R.string.ui_sign_in),
                     tint = c.onSurfaceVariant,
                     modifier = Modifier.size(18.dp),
                 )
