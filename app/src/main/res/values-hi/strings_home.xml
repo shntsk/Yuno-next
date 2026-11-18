@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_chip_all">सभी</string>
+    <string name="home_chip_music">संगीत</string>
+    <string name="home_chip_gaming">गेमिंग</string>
+    <string name="home_chip_mixes">मिक्स</string>
+    <string name="home_chip_podcasts">पॉडकास्ट</string>
+    <string name="home_chip_sports">खेल</string>
+    <string name="home_chip_news">समाचार</string>
+    <string name="home_chip_recently_uploaded">हाल ही में अपलोड किए गए</string>
+    <string name="home_chip_watched">देखे गए</string>
+    <string name="home_chip_unwatched">नहीं देखे गए</string>
+    <string name="home_chip_new_to_you">आपके लिए नया</string>
+    <string name="home_chip_comedy">कॉमेडी</string>
+    <string name="home_chip_education">शिक्षा</string>
+    <string name="home_chip_science_technology">विज्ञान और प्रौद्योगिकी</string>
+    <string name="home_chip_travel">यात्रा</string>
+    <string name="home_chip_fashion_beauty">फ़ैशन और सुंदरता</string>
+    <string name="home_chip_cooking">खाना पकाना</string>
+    <string name="home_chip_entertainment">मनोरंजन</string>
+    <string name="home_error_recommendations">सुझाव लोड नहीं हो सके।</string>
+</resources>
