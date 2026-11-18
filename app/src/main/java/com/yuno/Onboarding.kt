@@ -45,6 +45,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import android.view.HapticFeedbackConstants
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -174,7 +175,7 @@ fun OnboardingScreen(onFinished: () -> Unit, onSignIn: () -> Unit) {
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(SfIcons.ArrowBack, null, tint = c.onSurfaceVariant)
-                        Text("Back", color = c.onSurfaceVariant, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text(stringResource(R.string.ui_back), color = c.onSurfaceVariant, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
                     Row(
                         Modifier
@@ -184,7 +185,7 @@ fun OnboardingScreen(onFinished: () -> Unit, onSignIn: () -> Unit) {
                             .padding(horizontal = 18.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text("Next", color = c.onPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text(stringResource(R.string.onboarding_next), color = c.onPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         Spacer(Modifier.width(4.dp))
                         Icon(SfIcons.ArrowForward, null, tint = c.onPrimary, modifier = Modifier.size(18.dp))
                     }
@@ -197,7 +198,7 @@ fun OnboardingScreen(onFinished: () -> Unit, onSignIn: () -> Unit) {
                 ) {
                     if (step == 0) {
                         Text(
-                            "Skip",
+                            stringResource(R.string.onboarding_skip),
                             color = c.onSurfaceVariant,
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
@@ -226,7 +227,7 @@ fun OnboardingScreen(onFinished: () -> Unit, onSignIn: () -> Unit) {
                     ) {
                         Icon(
                             if (step == STEP_COUNT - 1) SfIcons.Check else SfIcons.ArrowForward,
-                            if (step == STEP_COUNT - 1) "Get started" else "Next",
+                            if (step == STEP_COUNT - 1) stringResource(R.string.onboarding_get_started) else stringResource(R.string.onboarding_next),
                             tint = c.onPrimary,
                         )
                     }
@@ -243,7 +244,7 @@ private fun WelcomeStep() {
     BrandMark(size = 72.dp)
     Spacer(Modifier.height(28.dp))
     Text(
-        "Welcome to Yuno",
+        stringResource(R.string.onboarding_welcome_title),
         fontFamily = RoundedHeavy,
         fontWeight = FontWeight.ExtraBold,
         fontSize = 32.sp,
@@ -252,7 +253,7 @@ private fun WelcomeStep() {
     )
     Spacer(Modifier.height(10.dp))
     Text(
-        "Your YouTube, without the ads.",
+        stringResource(R.string.onboarding_welcome_subtitle),
         color = c.onSurfaceVariant,
         fontSize = 16.sp,
         fontWeight = FontWeight.SemiBold,
@@ -263,18 +264,18 @@ private fun WelcomeStep() {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
         FeatureCard(
             SfIcons.Block,
-            "No ads",
-            "Play anything from YouTube without commercials or an ad SDK.",
+            stringResource(R.string.onboarding_feature_no_ads_title),
+            stringResource(R.string.onboarding_feature_no_ads_body),
         )
         FeatureCard(
             SfIcons.Headphones,
-            "Background audio",
-            "Lock the phone or switch apps — the sound keeps going.",
+            stringResource(R.string.onboarding_feature_background_audio_title),
+            stringResource(R.string.onboarding_feature_background_audio_body),
         )
         FeatureCard(
             SfIcons.Sync,
-            "Optional full sync",
-            "Sign in for Home, subscriptions, likes and history — or stay signed out.",
+            stringResource(R.string.onboarding_feature_full_sync_title),
+            stringResource(R.string.onboarding_feature_full_sync_body),
         )
     }
 }
@@ -285,7 +286,7 @@ private fun AppearanceStep() {
     Icon(SfIcons.Palette, null, tint = c.primary, modifier = Modifier.size(64.dp))
     Spacer(Modifier.height(16.dp))
     Text(
-        "Make it yours",
+        stringResource(R.string.onboarding_make_yours_title),
         fontFamily = RoundedHeavy,
         fontWeight = FontWeight.ExtraBold,
         fontSize = 28.sp,
@@ -294,7 +295,7 @@ private fun AppearanceStep() {
     )
     Spacer(Modifier.height(8.dp))
     Text(
-        "Pick a look. You can change this any time in the account sheet.",
+        stringResource(R.string.onboarding_make_yours_body),
         color = c.onSurfaceVariant,
         fontSize = 15.sp,
         fontWeight = FontWeight.Medium,
@@ -321,7 +322,7 @@ private fun AccountStep(signedIn: Boolean, onSignIn: () -> Unit) {
     Icon(SfIcons.AccountCircle, null, tint = c.primary, modifier = Modifier.size(64.dp))
     Spacer(Modifier.height(16.dp))
     Text(
-        if (signedIn) "You're signed in" else "Connect your account",
+        if (signedIn) stringResource(R.string.onboarding_signed_in_title) else stringResource(R.string.onboarding_connect_account_title),
         fontFamily = RoundedHeavy,
         fontWeight = FontWeight.ExtraBold,
         fontSize = 28.sp,
@@ -337,7 +338,7 @@ private fun AccountStep(signedIn: Boolean, onSignIn: () -> Unit) {
         profile.handle?.let { Text(it, color = c.onSurfaceVariant, fontSize = 14.sp) }
         Spacer(Modifier.height(16.dp))
         Text(
-            "Home, subscriptions, history and playlists will sync on this phone.",
+            stringResource(R.string.onboarding_signed_in_body),
             color = c.onSurfaceVariant,
             fontSize = 15.sp,
             fontWeight = FontWeight.Medium,
@@ -346,8 +347,7 @@ private fun AccountStep(signedIn: Boolean, onSignIn: () -> Unit) {
         )
     } else {
         Text(
-            "Sign in to get your recommendations, subscriptions, history and playlists. " +
-                "Likes, subscribes, Watch later and watch history sync back to your account.",
+            stringResource(R.string.ui_account_pitch_body),
             color = c.onSurfaceVariant,
             fontSize = 15.sp,
             fontWeight = FontWeight.Medium,
@@ -364,8 +364,7 @@ private fun AccountStep(signedIn: Boolean, onSignIn: () -> Unit) {
                 .padding(16.dp),
         ) {
             Text(
-                "Google treats unofficial apps as against its terms and can suspend accounts that use them. " +
-                    "A secondary Google account keeps that risk away from your main one.",
+                stringResource(R.string.onboarding_account_risk_notice),
                 color = c.onTertiaryContainer,
                 fontSize = 13.sp,
                 lineHeight = 18.sp,
@@ -373,10 +372,10 @@ private fun AccountStep(signedIn: Boolean, onSignIn: () -> Unit) {
             )
         }
         Spacer(Modifier.height(24.dp))
-        PillButton("Sign in with Google", onSignIn)
+        PillButton(stringResource(R.string.ui_sign_in_with_google), onSignIn)
         Spacer(Modifier.height(10.dp))
         Text(
-            "You can skip this — everything still works signed out.",
+            stringResource(R.string.onboarding_account_skip),
             color = c.onSurfaceVariant,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
@@ -400,7 +399,7 @@ private fun ReadyStep() {
     }
     Spacer(Modifier.height(28.dp))
     Text(
-        "You're ready",
+        stringResource(R.string.onboarding_ready_title),
         fontFamily = RoundedHeavy,
         fontWeight = FontWeight.ExtraBold,
         fontSize = 32.sp,
@@ -409,7 +408,7 @@ private fun ReadyStep() {
     )
     Spacer(Modifier.height(10.dp))
     Text(
-        "Search, play, and queue videos. Open the account sheet any time for appearance, Shorts and SponsorBlock.",
+        stringResource(R.string.onboarding_ready_body),
         color = c.onSurfaceVariant,
         fontSize = 16.sp,
         fontWeight = FontWeight.SemiBold,
