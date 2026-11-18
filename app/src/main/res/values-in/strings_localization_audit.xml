@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_next">Berikutnya</string>
+    <string name="onboarding_skip">Lewati</string>
+    <string name="onboarding_welcome_title">Selamat datang di Yuno</string>
+    <string name="onboarding_welcome_subtitle">YouTube-mu, tanpa iklan.</string>
+    <string name="onboarding_feature_no_ads_title">Tanpa iklan</string>
+    <string name="onboarding_feature_no_ads_body">Putar video YouTube apa pun tanpa iklan atau SDK iklan.</string>
+    <string name="onboarding_feature_background_audio_title">Audio latar</string>
+    <string name="onboarding_feature_background_audio_body">Kunci ponsel atau beralih aplikasi — audio akan tetap berjalan.</string>
+    <string name="onboarding_feature_full_sync_title">Sinkronisasi penuh opsional</string>
+    <string name="onboarding_feature_full_sync_body">Masuk untuk menyinkronkan Beranda, langganan, suka, dan riwayat — atau tetap tanpa masuk.</string>
+    <string name="onboarding_make_yours_title">Jadikan milikmu</string>
+    <string name="onboarding_make_yours_body">Pilih tampilan. Kamu bisa mengubahnya kapan saja dari menu akun.</string>
+    <string name="onboarding_signed_in_title">Kamu sudah masuk</string>
+    <string name="onboarding_connect_account_title">Hubungkan akunmu</string>
+    <string name="onboarding_signed_in_body">Beranda, langganan, riwayat, dan playlist akan disinkronkan di ponsel ini.</string>
+    <string name="onboarding_account_risk_notice">Google menganggap aplikasi tidak resmi melanggar persyaratannya dan dapat menangguhkan akun yang menggunakannya. Gunakan akun Google sekunder agar akun utamamu tidak terkena risiko tersebut.</string>
+    <string name="onboarding_account_skip">Kamu bisa melewati langkah ini — semua fitur tetap berfungsi tanpa masuk.</string>
+    <string name="onboarding_ready_title">Kamu siap</string>
+    <string name="onboarding_ready_body">Cari, putar, dan antrekan video. Buka menu akun kapan saja untuk mengatur tampilan, Shorts, dan SponsorBlock.</string>
+    <string name="ui_history_signed_out_body">Video yang kamu tonton di ponsel ini akan muncul di sini.</string>
+    <string name="player_sign_in_to_like">Masuk untuk menyukai video.</string>
+    <string name="player_sign_in_to_subscribe">Masuk untuk berlangganan.</string>
+    <string name="player_sign_in_to_save">Masuk untuk menyimpan video.</string>
+    <string name="player_sign_in_to_playlist">Masuk untuk menyimpan video ke playlist.</string>
+    <string name="player_watch_later_update_failed">Gagal memperbarui Tonton nanti.</string>
+    <plurals name="player_subscriber_count">
+        <item quantity="other">%1$s subscriber</item>
+    </plurals>
+    <string name="app_subscribe_first">Berlangganan ke channel ini terlebih dahulu, lalu aktifkan lonceng.</string>
+    <string name="settings_liquid_glass">Liquid Glass</string>
+    <string name="settings_liquid_glass_line">Bilah buram dan refraktif yang mengambil warna dari halaman di belakangnya</string>
+</resources>
