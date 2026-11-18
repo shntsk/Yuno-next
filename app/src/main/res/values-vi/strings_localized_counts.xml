@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ui_save">Lưu</string>
+    <plurals name="ui_video_views">
+        <item quantity="other">%1$s lượt xem</item>
+    </plurals>
+</resources>
