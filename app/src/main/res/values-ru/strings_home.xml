@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_chip_all">Все</string>
+    <string name="home_chip_music">Музыка</string>
+    <string name="home_chip_gaming">Игры</string>
+    <string name="home_chip_mixes">Миксы</string>
+    <string name="home_chip_podcasts">Подкасты</string>
+    <string name="home_chip_sports">Спорт</string>
+    <string name="home_chip_news">Новости</string>
+    <string name="home_chip_recently_uploaded">Недавно загруженные</string>
+    <string name="home_chip_watched">Просмотренные</string>
+    <string name="home_chip_unwatched">Не просмотренные</string>
+    <string name="home_chip_new_to_you">Новое для вас</string>
+    <string name="home_chip_comedy">Комедии</string>
+    <string name="home_chip_education">Образование</string>
+    <string name="home_chip_science_technology">Наука и технологии</string>
+    <string name="home_chip_travel">Путешествия</string>
+    <string name="home_chip_fashion_beauty">Мода и красота</string>
+    <string name="home_chip_cooking">Кулинария</string>
+    <string name="home_chip_entertainment">Развлечения</string>
+    <string name="home_error_recommendations">Не удалось загрузить рекомендации.</string>
+</resources>
