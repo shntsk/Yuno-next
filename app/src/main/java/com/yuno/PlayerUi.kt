@@ -276,9 +276,9 @@ fun PlayerScreen(
                         Spacer(Modifier.height(6.dp))
                         val statsItem = details?.item ?: item
                         val stats = listOfNotNull(
-                            statsItem.views.takeIf { it >= 0 }?.let { "${formatCount(it)} views" },
+                            statsItem.views.takeIf { it >= 0 }?.let { viewsLine(it) },
                             YouTube.uploadedLabel(statsItem)?.ifBlank { null },
-                            details?.likes?.takeIf { it > 0 }?.let { "${formatCount(it)} likes" },
+                            details?.likes?.takeIf { it > 0 }?.let { plural(R.plurals.player_likes, compactQuantity(it), formatCount(it)) },
                         ).joinDots()
                         val hasDescription = !details?.description.isNullOrBlank()
                         Row(
@@ -341,7 +341,7 @@ fun PlayerScreen(
                 }
                 val related = details?.related.orEmpty()
                 if (related.isNotEmpty()) {
-                    item(key = "moreTitle") { SectionTitle("More videos") }
+                    item(key = "moreTitle") { SectionTitle(stringResource(R.string.player_more_videos)) }
                     items(related, key = { "rel-" + it.id }) { video ->
                         Box(Modifier.padding(horizontal = PageGutter)) { VideoRow(video, onClick = { onOpen(video) }) }
                     }
