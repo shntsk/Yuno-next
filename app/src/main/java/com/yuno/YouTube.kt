@@ -338,12 +338,12 @@ object YouTube {
      * Feed cards still use the extractor's own [VideoItem.uploaded] text.
      */
     fun uploadedLabel(item: VideoItem, now: Instant = Instant.now()): String? {
-        val uploadedAt = item.uploadedAt ?: return item.uploaded
+        val uploadedAt = item.uploadedAt ?: return displayAge(item.uploaded)
         val ageSeconds = Duration.between(uploadedAt, now).seconds
         return if (ageSeconds >= 0L && ageSeconds < 4L * 86_400L) {
-            relativeTime(uploadedAt, now)
+            displayAge(relativeTime(uploadedAt, now)) ?: relativeTime(uploadedAt, now)
         } else {
-            DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date.from(uploadedAt))
+            DateFormat.getDateInstance(DateFormat.MEDIUM, AppLanguage.locale).format(Date.from(uploadedAt))
         }
     }
 
