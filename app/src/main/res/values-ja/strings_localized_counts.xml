@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ui_save">保存</string>
+    <plurals name="ui_video_views">
+        <item quantity="other">%1$s 回視聴</item>
+    </plurals>
+</resources>
