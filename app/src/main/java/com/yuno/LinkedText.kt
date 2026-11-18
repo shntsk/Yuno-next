@@ -17,12 +17,20 @@ val LocalVideoLinkOpener = staticCompositionLocalOf<(String) -> Unit> { {} }
 val LocalHashtagOpener = staticCompositionLocalOf<(String) -> Unit> { {} }
 
 private const val LINK_TAG = "yuno-link"
+private const val TIMESTAMP_TAG = "yuno-timestamp"
 private val URL_PATTERN = Regex("""(?i)(?<![A-Za-z0-9_@])(?:(?:https?://|www\.)[^\s<>"']+|(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}(?:/[^\s<>"']*)?)""")
 private val HASHTAG_PATTERN = Regex("""(?<![\p{L}\p{N}_])#[\p{L}\p{N}_]+""")
 private val HANDLE_PATTERN = Regex("""(?<![A-Za-z0-9._%+-])@[A-Za-z0-9][A-Za-z0-9._-]{1,28}[A-Za-z0-9]""")
 private val VIDEO_ID_PATTERN = Regex("^[A-Za-z0-9_-]{11}$")
+/** Matches m:ss and h:mm:ss without consuming adjacent digits or colons. */
+private val TIMESTAMP_PATTERN = Regex("""(?<![\d:])(?:(\d{1,3}):)?(\d{1,4}):([0-5]\d)(?![\d:])""")
 
-private data class LinkRange(val start: Int, val end: Int, val target: String)
+private data class LinkRange(
+    val start: Int,
+    val end: Int,
+    val target: String,
+    val tag: String = LINK_TAG,
+)
 
 @Composable
 fun LinkedText(
@@ -30,6 +38,7 @@ fun LinkedText(
     modifier: Modifier = Modifier,
     style: TextStyle,
     links: List<TextLinkRange> = emptyList(),
+    onTimestampClick: ((Long) -> Unit)? = null,
 ) {
     val uriHandler = LocalUriHandler.current
     val openChannel = LocalChannelOpener.current
@@ -37,7 +46,7 @@ fun LinkedText(
     val openHashtag = LocalHashtagOpener.current
     val background = androidx.compose.material3.MaterialTheme.colorScheme.background
     val linkColor = if (background.luminance() < 0.5f) Color(0xFF3EA6FF) else Color(0xFF065FD4)
-    val annotated = remember(text, links, linkColor) {
+    val annotated = remember(text, links, linkColor, onTimestampClick != null) {
         val ranges = buildList {
             links.forEach { link ->
                 if (link.start in 0 until text.length && link.end in 1..text.length &&
@@ -55,6 +64,22 @@ fun LinkedText(
                 val handle = match.value
                 add(LinkRange(match.range.first, match.range.last + 1, "https://www.youtube.com/$handle"))
             }
+            if (onTimestampClick != null) {
+                TIMESTAMP_PATTERN.findAll(text).forEach { match ->
+                    val hours = match.groups[1]?.value?.toLongOrNull()
+                    val minutes = match.groups[2]?.value?.toLongOrNull() ?: return@forEach
+                    val seconds = match.groups[3]?.value?.toLongOrNull() ?: return@forEach
+                    // In h:mm:ss, the middle field is minutes; in m:ss it may exceed 59.
+                    if (hours != null && minutes !in 0L..59L) return@forEach
+                    val totalSeconds = (hours ?: 0L) * 3_600L + minutes * 60L + seconds
+                    add(LinkRange(
+                        match.range.first,
+                        match.range.last + 1,
+                        (totalSeconds * 1_000L).toString(),
+                        TIMESTAMP_TAG,
+                    ))
+                }
+            }
         }.sortedWith(compareBy<LinkRange> { it.start }.thenByDescending { it.end - it.start })
 
         val accepted = mutableListOf<LinkRange>()
@@ -67,7 +92,7 @@ fun LinkedText(
             var cursor = 0
             accepted.sortedBy { it.start }.forEach { range ->
                 append(text.substring(cursor, range.start))
-                pushStringAnnotation(LINK_TAG, range.target)
+                pushStringAnnotation(range.tag, range.target)
                 pushStyle(
                     SpanStyle(color = linkColor),
                 )
@@ -85,6 +110,12 @@ fun LinkedText(
         modifier = modifier,
         style = style,
         onClick = { offset ->
+            val timestampMs = annotated.getStringAnnotations(TIMESTAMP_TAG, offset, offset)
+                .firstOrNull()?.item?.toLongOrNull()
+            if (timestampMs != null) {
+                onTimestampClick?.invoke(timestampMs)
+                return@ClickableText
+            }
             val target = annotated.getStringAnnotations(LINK_TAG, offset, offset).firstOrNull()?.item
                 ?: return@ClickableText
             when (val destination = resolveLink(target)) {
