@@ -20,10 +20,10 @@
     <string name="shorts_like">Suka</string>
     <string name="shorts_comments">Komentar</string>
     <string name="shorts_share">Bagikan</string>
-    <string name="shorts_channel">Channel</string>
+    <string name="shorts_channel">Kanal</string>
 
     <!-- Channel card over a short (228 dp wide card, one line each). -->
-    <string name="shorts_subscribe">Subscribe</string>
+    <string name="shorts_subscribe">Berlangganan</string>
     <string name="shorts_unsubscribe">Berhenti subscribe</string>
     <string name="shorts_go_to_channel">Buka channel</string>
     <!-- Accessibility labels of the channel card's bell button. -->
