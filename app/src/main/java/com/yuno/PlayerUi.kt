@@ -278,7 +278,7 @@ fun PlayerScreen(
                         val stats = listOfNotNull(
                             statsItem.views.takeIf { it >= 0 }?.let { viewsLine(it) },
                             YouTube.uploadedLabel(statsItem)?.ifBlank { null },
-                            details?.likes?.takeIf { it > 0 }?.let { plural(R.plurals.player_likes, compactQuantity(it), formatCount(it)) },
+                            details?.likes?.takeIf { it > 0 }?.let { plural(R.plurals.player_likes, it, formatCount(it)) },
                         ).joinDots()
                         val hasDescription = !details?.description.isNullOrBlank()
                         Row(
