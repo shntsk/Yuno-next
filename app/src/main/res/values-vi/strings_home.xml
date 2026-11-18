@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_chip_all">Tất cả</string>
+    <string name="home_chip_music">Âm nhạc</string>
+    <string name="home_chip_gaming">Trò chơi</string>
+    <string name="home_chip_mixes">Bản phối</string>
+    <string name="home_chip_podcasts">Podcast</string>
+    <string name="home_chip_sports">Thể thao</string>
+    <string name="home_chip_news">Tin tức</string>
+    <string name="home_chip_recently_uploaded">Mới tải lên</string>
+    <string name="home_chip_watched">Đã xem</string>
+    <string name="home_chip_unwatched">Chưa xem</string>
+    <string name="home_chip_new_to_you">Mới dành cho bạn</string>
+    <string name="home_chip_comedy">Hài kịch</string>
+    <string name="home_chip_education">Giáo dục</string>
+    <string name="home_chip_science_technology">Khoa học và công nghệ</string>
+    <string name="home_chip_travel">Du lịch</string>
+    <string name="home_chip_fashion_beauty">Thời trang và làm đẹp</string>
+    <string name="home_chip_cooking">Nấu ăn</string>
+    <string name="home_chip_entertainment">Giải trí</string>
+    <string name="home_error_recommendations">Không thể tải đề xuất.</string>
+</resources>
