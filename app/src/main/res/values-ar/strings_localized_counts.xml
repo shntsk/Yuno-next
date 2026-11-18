@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ui_save">حفظ</string>
+    <plurals name="ui_video_views">
+        <item quantity="zero">%1$s مشاهدة</item>
+        <item quantity="one">%1$s مشاهدة</item>
+        <item quantity="two">%1$s مشاهدتان</item>
+        <item quantity="few">%1$s مشاهدات</item>
+        <item quantity="many">%1$s مشاهدة</item>
+        <item quantity="other">%1$s مشاهدة</item>
+    </plurals>
+</resources>
