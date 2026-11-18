@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_next">Weiter</string>
+    <string name="onboarding_skip">Überspringen</string>
+    <string name="onboarding_welcome_title">Willkommen bei Yuno</string>
+    <string name="onboarding_welcome_subtitle">Dein YouTube ohne Werbung.</string>
+    <string name="onboarding_feature_no_ads_title">Keine Werbung</string>
+    <string name="onboarding_feature_no_ads_body">Spiele beliebige YouTube-Videos ohne Werbeclips oder Werbe-SDK.</string>
+    <string name="onboarding_feature_background_audio_title">Audio im Hintergrund</string>
+    <string name="onboarding_feature_background_audio_body">Sperre dein Handy oder wechsle die App – der Ton läuft weiter.</string>
+    <string name="onboarding_feature_full_sync_title">Optionaler vollständiger Sync</string>
+    <string name="onboarding_feature_full_sync_body">Melde dich für Startseite, Abos, Likes und Verlauf an – oder bleib abgemeldet.</string>
+    <string name="onboarding_make_yours_title">Mach es zu deinem</string>
+    <string name="onboarding_make_yours_body">Such dir ein Design aus. Du kannst es jederzeit im Kontomenü ändern.</string>
+    <string name="onboarding_signed_in_title">Du bist angemeldet</string>
+    <string name="onboarding_connect_account_title">Konto verbinden</string>
+    <string name="onboarding_signed_in_body">Startseite, Abos, Verlauf und Playlists werden auf diesem Gerät synchronisiert.</string>
+    <string name="onboarding_account_risk_notice">Google betrachtet inoffizielle Apps als Verstoß gegen seine Nutzungsbedingungen und kann Konten sperren, die sie verwenden. Ein separates Google-Konto hält dieses Risiko von deinem Hauptkonto fern.</string>
+    <string name="onboarding_account_skip">Du kannst diesen Schritt überspringen – alles funktioniert auch ohne Anmeldung.</string>
+    <string name="onboarding_ready_title">Alles bereit</string>
+    <string name="onboarding_ready_body">Suche Videos, spiele sie ab und stelle sie in die Warteschlange. Öffne jederzeit das Kontomenü, um Darstellung, Shorts und SponsorBlock anzupassen.</string>
+    <string name="ui_history_signed_out_body">Videos, die du auf diesem Gerät ansiehst, erscheinen hier.</string>
+    <string name="player_sign_in_to_like">Melde dich an, um Videos zu liken.</string>
+    <string name="player_sign_in_to_subscribe">Melde dich an, um Kanäle zu abonnieren.</string>
+    <string name="player_sign_in_to_save">Melde dich an, um Videos zu speichern.</string>
+    <string name="player_sign_in_to_playlist">Melde dich an, um Videos in einer Playlist zu speichern.</string>
+    <string name="player_watch_later_update_failed">„Später ansehen“ konnte nicht aktualisiert werden.</string>
+    <plurals name="player_subscriber_count">
+        <item quantity="one">%1$s Abonnent</item>
+        <item quantity="other">%1$s Abonnenten</item>
+    </plurals>
+    <string name="app_subscribe_first">Abonniere zuerst diesen Kanal und aktiviere dann die Glocke.</string>
+    <string name="settings_liquid_glass">Liquid Glass</string>
+    <string name="settings_liquid_glass_line">Mattierte, lichtbrechende Leiste, die die Seite dahinter aufnimmt</string>
+</resources>
