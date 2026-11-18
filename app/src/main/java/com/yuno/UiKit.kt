@@ -540,7 +540,7 @@ private fun statCompact(v: Double, suffix: String): String {
 fun metaLine(channel: String, views: Long, uploaded: String?): String =
     listOfNotNull(
         channel.ifBlank { null },
-        views.takeIf { it >= 0 }?.let { "${formatCount(it)} views" },
+        views.takeIf { it >= 0 }?.let { plural(R.plurals.views_count, it, formatCount(it)) },
         displayAge(uploaded)?.ifBlank { null },
     ).joinDots()
 
