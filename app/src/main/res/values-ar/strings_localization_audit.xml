@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_next">التالي</string>
+    <string name="onboarding_skip">تخطي</string>
+    <string name="onboarding_welcome_title">مرحبًا بك في Yuno</string>
+    <string name="onboarding_welcome_subtitle">يوتيوب الخاص بك، بلا إعلانات.</string>
+    <string name="onboarding_feature_no_ads_title">بلا إعلانات</string>
+    <string name="onboarding_feature_no_ads_body">شغّل أي فيديو من YouTube دون إعلانات أو مكتبة لعرض الإعلانات.</string>
+    <string name="onboarding_feature_background_audio_title">الصوت في الخلفية</string>
+    <string name="onboarding_feature_background_audio_body">اقفل هاتفك أو انتقل إلى تطبيق آخر، وسيستمر الصوت.</string>
+    <string name="onboarding_feature_full_sync_title">مزامنة كاملة اختيارية</string>
+    <string name="onboarding_feature_full_sync_body">سجّل الدخول لمزامنة الصفحة الرئيسية والاشتراكات والإعجابات والسجل، أو تابع دون تسجيل الدخول.</string>
+    <string name="onboarding_make_yours_title">خصّصه كما تحب</string>
+    <string name="onboarding_make_yours_body">اختر مظهرًا. يمكنك تغييره في أي وقت من قائمة الحساب.</string>
+    <string name="onboarding_signed_in_title">تم تسجيل الدخول</string>
+    <string name="onboarding_connect_account_title">اربط حسابك</string>
+    <string name="onboarding_signed_in_body">ستتم مزامنة الصفحة الرئيسية والاشتراكات والسجل وقوائم التشغيل على هذا الهاتف.</string>
+    <string name="onboarding_account_risk_notice">تعتبر Google التطبيقات غير الرسمية مخالفة لشروطها، وقد توقف الحسابات التي تستخدمها. استخدم حساب Google ثانويًا لإبعاد هذا الخطر عن حسابك الأساسي.</string>
+    <string name="onboarding_account_skip">يمكنك تخطي هذه الخطوة؛ سيظل كل شيء يعمل دون تسجيل الدخول.</string>
+    <string name="onboarding_ready_title">أنت جاهز</string>
+    <string name="onboarding_ready_body">ابحث عن الفيديوهات وشغّلها وأضفها إلى قائمة الانتظار. افتح قائمة الحساب في أي وقت لتغيير المظهر أو Shorts أو SponsorBlock.</string>
+    <string name="ui_history_signed_out_body">ستظهر هنا الفيديوهات التي تشاهدها على هذا الهاتف.</string>
+    <string name="player_sign_in_to_like">سجّل الدخول للإعجاب بالفيديوهات.</string>
+    <string name="player_sign_in_to_subscribe">سجّل الدخول للاشتراك.</string>
+    <string name="player_sign_in_to_save">سجّل الدخول لحفظ الفيديوهات.</string>
+    <string name="player_sign_in_to_playlist">سجّل الدخول لحفظ الفيديو في قائمة تشغيل.</string>
+    <string name="player_watch_later_update_failed">تعذّر تحديث قائمة المشاهدة لاحقًا.</string>
+    <plurals name="player_subscriber_count">
+        <item quantity="zero">%1$s مشترك</item>
+        <item quantity="one">%1$s مشترك</item>
+        <item quantity="two">%1$s مشتركان</item>
+        <item quantity="few">%1$s مشتركين</item>
+        <item quantity="many">%1$s مشترك</item>
+        <item quantity="other">%1$s مشترك</item>
+    </plurals>
+    <string name="app_subscribe_first">اشترك في هذه القناة أولًا، ثم فعّل الجرس.</string>
+    <string name="settings_liquid_glass">الزجاج السائل</string>
+    <string name="settings_liquid_glass_line">شريط مصنفر وانكساري يستعين بألوان الصفحة خلفه</string>
+</resources>
