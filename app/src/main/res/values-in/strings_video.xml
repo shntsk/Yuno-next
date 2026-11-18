@@ -50,7 +50,7 @@
     <string name="video_captions_tag_auto">otomatis</string>
     <string name="video_captions_tag_downloading">mendownload</string>
     <string name="video_captions_tag_translated">diterjemahkan</string>
-    <string name="video_captions_tag_download">download</string>
+    <string name="video_captions_tag_download">unduh</string>
 
     <!-- Speed card: tag after 1× -->
     <string name="video_speed_normal">Normal</string>
