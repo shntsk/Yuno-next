@@ -474,7 +474,7 @@ class PlayerState(private val scope: CoroutineScope) {
 
     /** Long-press Save. Runs here, not in the sheet: closing the sheet would cancel its scope mid-request. */
     fun saveToWatchLater(video: VideoItem) {
-        if (!Account.signedIn) { actionMessage = "Sign in to save videos."; return }
+        if (!Account.signedIn) { actionMessage = str(R.string.player_sign_in_to_save); return }
         scope.launch {
             runCatching { InnerTube.setInWatchLater(video.id, true) }
                 .onSuccess {
