@@ -144,6 +144,11 @@ class PlayerState(private val scope: CoroutineScope) {
     var descriptionScroll by mutableIntStateOf(0)
 
     val comments = CommentsState(scope).apply {
+        onTimestampClick = { timestampMs ->
+            val knownDuration = durationMs.takeIf { it > 0L }
+                ?: details?.item?.durationSec?.takeIf { it > 0 }?.times(1_000L)
+            if (knownDuration == null || timestampMs <= knownDuration) seekTo(timestampMs)
+        }
         // NewPipe only knows chapters typed into the description; YouTube's auto chapters come
         // from the watch page the comments load from.
         onChapters = { id, chapters ->
