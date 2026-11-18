@@ -493,7 +493,7 @@ fun VideoContent(
         )
         if (botWait > 0f) {
             Text(
-                "YouTube is checking this connection. Trying again…",
+                stringResource(R.string.video_bot_check_waiting),
                 color = Color.White,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -938,7 +938,7 @@ private fun SkipSegmentPill(segment: SponsorBlock.Segment, enabled: Boolean, mod
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val ink = if (segment.category.color.luminance() > 0.45f) Color(0xFF151515) else Color.White
-        Text("Skip ${segment.category.short}", color = ink, fontSize = 12.sp, fontWeight = FontWeight.Black)
+        Text(stringResource(R.string.video_skip_segment, segment.category.short), color = ink, fontSize = 12.sp, fontWeight = FontWeight.Black)
         Icon(SfIcons.SkipNext, null, tint = ink, modifier = Modifier.size(18.dp))
     }
 }
@@ -959,11 +959,11 @@ private fun SkippedNote(state: PlayerState, modifier: Modifier) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            "Skipped ${formatDuration(skip.segment.lengthMs)} ${skip.segment.category.short}",
+            stringResource(R.string.video_skipped_segment, formatDuration(skip.segment.lengthMs), skip.segment.category.short),
             color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold,
         )
         Text(
-            "Undo",
+            stringResource(R.string.video_undo),
             color = skip.segment.category.color, fontSize = 12.sp, fontWeight = FontWeight.Black,
             modifier = Modifier.pressable { state.undoSkip(skip) }.padding(horizontal = 10.dp, vertical = 8.dp),
         )
@@ -984,18 +984,21 @@ fun QualitySheet(state: PlayerState, onDismiss: () -> Unit) {
         // Scrolls: in fullscreen (landscape) only the first few rows fit (GitHub issue #1).
         Column(Modifier.verticalScroll(rememberScrollState())) {
         Text(
-            "Quality",
+            stringResource(R.string.video_quality),
             fontFamily = RoundedHeavy, fontWeight = FontWeight.ExtraBold, fontSize = 21.sp,
             modifier = Modifier.padding(start = PageGutter, end = PageGutter, bottom = 8.dp),
         )
         state.playingFormat?.let {
             Text(
-                "Playing $it",
+                stringResource(R.string.video_quality_playing, it),
                 color = c.onSurfaceVariant, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(start = PageGutter, end = PageGutter, bottom = 8.dp),
             )
         }
-        SheetRow("Auto", "Best up to 1080p" + ((state.decodedHeight?.let { "${it}p" } ?: details.quality)?.let { " · playing $it" } ?: ""), chosen == null) {
+        val playingQuality = state.decodedHeight?.let { "${it}p" } ?: details.quality
+        val autoSubtitle = stringResource(R.string.video_quality_auto_best) +
+            (playingQuality?.let { " · " + stringResource(R.string.video_quality_auto_playing, it) } ?: "")
+        SheetRow(stringResource(R.string.video_quality_auto), autoSubtitle, chosen == null) {
             state.setQuality(null); onDismiss()
         }
         details.qualities.forEach { h ->
@@ -1018,7 +1021,7 @@ fun SpeedSheet(state: PlayerState, onDismiss: () -> Unit) {
     ) {
         Column(Modifier.verticalScroll(rememberScrollState())) {
             Text(
-                "Speed",
+                stringResource(R.string.video_speed),
                 fontFamily = RoundedHeavy, fontWeight = FontWeight.ExtraBold, fontSize = 21.sp,
                 modifier = Modifier.padding(start = PageGutter, end = PageGutter, bottom = 8.dp),
             )
@@ -1042,12 +1045,12 @@ fun ChaptersSheet(state: PlayerState, onDismiss: () -> Unit) {
         containerColor = c.surfaceContainerLow,
     ) {
         Text(
-            "Chapters",
+            stringResource(R.string.bar_chapters),
             fontFamily = RoundedHeavy, fontWeight = FontWeight.ExtraBold, fontSize = 21.sp,
             modifier = Modifier.padding(start = PageGutter, end = PageGutter, bottom = 8.dp),
         )
         Text(
-            "${current + 1} of ${chapters.size}",
+            stringResource(R.string.bar_chapter_position, current + 1, chapters.size),
             color = c.onSurfaceVariant, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(start = PageGutter, end = PageGutter, bottom = 8.dp),
         )
