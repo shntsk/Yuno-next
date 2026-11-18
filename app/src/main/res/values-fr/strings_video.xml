@@ -11,7 +11,7 @@
     <string name="video_playback_speed">Vitesse de lecture</string>
     <string name="video_captions">Sous-titres</string>
     <string name="video_quality">Qualité</string>
-    <string name="video_pip">Picture-in-picture</string>
+    <string name="video_pip">Image dans l’image</string>
     <string name="video_next">Suivant</string>
     <string name="video_fullscreen">Plein écran</string>
     <string name="video_exit_fullscreen">Quitter le plein écran</string>
@@ -24,7 +24,7 @@
 <string name="video_pip_off">Le mode Picture-in-picture est désactivé pour Yuno dans les paramètres.</string>
 
     <!-- Quality: automatic. Also the start of the quality pill on the video ("Auto · 720p"): small pill, keep short. -->
-    <string name="video_quality_auto">Auto</string>
+    <string name="video_quality_auto">Automatique</string>
     <!-- Subtitle of the Auto row in the quality sheet. -->
     <string name="video_quality_auto_best">Meilleure qualité jusqu\'à 1080p</string>
     <!-- Appended to the Auto row's subtitle after " · "; %1$s = a resolution like "720p". -->
@@ -47,7 +47,7 @@
     <!-- Captions card: row that turns captions off. -->
     <string name="video_captions_off">Désactivés</string>
     <!-- Captions card: small grey tags after a language name. -->
-    <string name="video_captions_tag_auto">auto</string>
+    <string name="video_captions_tag_auto">automatique</string>
     <string name="video_captions_tag_downloading">téléchargement</string>
     <string name="video_captions_tag_translated">traduits</string>
     <string name="video_captions_tag_download">à télécharger</string>
