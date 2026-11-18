@@ -309,9 +309,32 @@ private val ChipBarMin = 18.dp
 private val ChipBarHeight = 4.dp
 
 @Composable
+private fun homeChipLabel(title: String): String = when (title.trim().lowercase(java.util.Locale.ROOT)) {
+    "all" -> stringResource(R.string.home_chip_all)
+    "music" -> stringResource(R.string.home_chip_music)
+    "gaming" -> stringResource(R.string.home_chip_gaming)
+    "mixes" -> stringResource(R.string.home_chip_mixes)
+    "podcasts" -> stringResource(R.string.home_chip_podcasts)
+    "sports" -> stringResource(R.string.home_chip_sports)
+    "news" -> stringResource(R.string.home_chip_news)
+    "recently uploaded" -> stringResource(R.string.home_chip_recently_uploaded)
+    "watched" -> stringResource(R.string.home_chip_watched)
+    "unwatched" -> stringResource(R.string.home_chip_unwatched)
+    "new to you" -> stringResource(R.string.home_chip_new_to_you)
+    "comedy" -> stringResource(R.string.home_chip_comedy)
+    "education" -> stringResource(R.string.home_chip_education)
+    "science & technology", "science and technology" -> stringResource(R.string.home_chip_science_technology)
+    "travel" -> stringResource(R.string.home_chip_travel)
+    "fashion & beauty", "fashion and beauty" -> stringResource(R.string.home_chip_fashion_beauty)
+    "cooking" -> stringResource(R.string.home_chip_cooking)
+    "entertainment" -> stringResource(R.string.home_chip_entertainment)
+    else -> title
+}
+
+@Composable
 private fun HomeChips(chips: List<FeedChip>, chosen: FeedChip?, onPick: (FeedChip) -> Unit) {
     val selected = chips.indexOfFirst { chosen?.let { ch -> ch.title == it.title } ?: (it.token == null) }
-    UnderlineTabs(chips.map { it.title }, selected, { onPick(chips[it]) }, Modifier.padding(top = 2.dp, bottom = 10.dp))
+    UnderlineTabs(chips.map { homeChipLabel(it.title) }, selected, { onPick(chips[it]) }, Modifier.padding(top = 2.dp, bottom = 10.dp))
 }
 
 @Composable
