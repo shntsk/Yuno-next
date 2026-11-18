@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_chip_all">الكل</string>
+    <string name="home_chip_music">الموسيقى</string>
+    <string name="home_chip_gaming">الألعاب</string>
+    <string name="home_chip_mixes">قوائم المزيج</string>
+    <string name="home_chip_podcasts">البودكاست</string>
+    <string name="home_chip_sports">الرياضة</string>
+    <string name="home_chip_news">الأخبار</string>
+    <string name="home_chip_recently_uploaded">تم تحميلها مؤخرًا</string>
+    <string name="home_chip_watched">تمت مشاهدتها</string>
+    <string name="home_chip_unwatched">لم تتم مشاهدتها</string>
+    <string name="home_chip_new_to_you">جديد لك</string>
+    <string name="home_chip_comedy">كوميديا</string>
+    <string name="home_chip_education">التعليم</string>
+    <string name="home_chip_science_technology">العلوم والتكنولوجيا</string>
+    <string name="home_chip_travel">السفر</string>
+    <string name="home_chip_fashion_beauty">الموضة والجمال</string>
+    <string name="home_chip_cooking">الطبخ</string>
+    <string name="home_chip_entertainment">الترفيه</string>
+    <string name="home_error_recommendations">تعذر تحميل التوصيات.</string>
+</resources>
