@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_next">Tiếp theo</string>
+    <string name="onboarding_skip">Bỏ qua</string>
+    <string name="onboarding_welcome_title">Chào mừng đến với Yuno</string>
+    <string name="onboarding_welcome_subtitle">YouTube của bạn, không có quảng cáo.</string>
+    <string name="onboarding_feature_no_ads_title">Không quảng cáo</string>
+    <string name="onboarding_feature_no_ads_body">Phát mọi video trên YouTube mà không có quảng cáo hoặc SDK quảng cáo.</string>
+    <string name="onboarding_feature_background_audio_title">Âm thanh nền</string>
+    <string name="onboarding_feature_background_audio_body">Khóa điện thoại hoặc chuyển ứng dụng — âm thanh vẫn tiếp tục phát.</string>
+    <string name="onboarding_feature_full_sync_title">Đồng bộ đầy đủ tùy chọn</string>
+    <string name="onboarding_feature_full_sync_body">Đăng nhập để đồng bộ Trang chủ, kênh đăng ký, video đã thích và lịch sử — hoặc tiếp tục mà không đăng nhập.</string>
+    <string name="onboarding_make_yours_title">Tùy chỉnh theo ý bạn</string>
+    <string name="onboarding_make_yours_body">Chọn giao diện. Bạn có thể thay đổi bất cứ lúc nào trong menu tài khoản.</string>
+    <string name="onboarding_signed_in_title">Bạn đã đăng nhập</string>
+    <string name="onboarding_connect_account_title">Kết nối tài khoản</string>
+    <string name="onboarding_signed_in_body">Trang chủ, kênh đăng ký, lịch sử và danh sách phát sẽ được đồng bộ trên điện thoại này.</string>
+    <string name="onboarding_account_risk_notice">Google xem các ứng dụng không chính thức là vi phạm điều khoản và có thể đình chỉ tài khoản sử dụng chúng. Dùng một tài khoản Google phụ sẽ giúp bảo vệ tài khoản chính khỏi rủi ro này.</string>
+    <string name="onboarding_account_skip">Bạn có thể bỏ qua bước này — mọi thứ vẫn hoạt động khi không đăng nhập.</string>
+    <string name="onboarding_ready_title">Bạn đã sẵn sàng</string>
+    <string name="onboarding_ready_body">Tìm kiếm, phát và thêm video vào hàng đợi. Mở menu tài khoản bất cứ lúc nào để thay đổi giao diện, Shorts và SponsorBlock.</string>
+    <string name="ui_history_signed_out_body">Những video bạn xem trên điện thoại này sẽ xuất hiện ở đây.</string>
+    <string name="player_sign_in_to_like">Đăng nhập để thích video.</string>
+    <string name="player_sign_in_to_subscribe">Đăng nhập để đăng ký kênh.</string>
+    <string name="player_sign_in_to_save">Đăng nhập để lưu video.</string>
+    <string name="player_sign_in_to_playlist">Đăng nhập để lưu video vào danh sách phát.</string>
+    <string name="player_watch_later_update_failed">Không thể cập nhật Xem sau.</string>
+    <plurals name="player_subscriber_count">
+        <item quantity="other">%1$s người đăng ký</item>
+    </plurals>
+    <string name="app_subscribe_first">Trước tiên hãy đăng ký kênh này, sau đó bật chuông.</string>
+    <string name="settings_liquid_glass">Liquid Glass</string>
+    <string name="settings_liquid_glass_line">Thanh kính mờ khúc xạ lấy màu sắc từ trang phía sau</string>
+</resources>
