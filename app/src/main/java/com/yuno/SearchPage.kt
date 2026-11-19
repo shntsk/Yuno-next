@@ -1,16 +1,11 @@
 package com.yuno
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.EnterExitState
-import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -76,13 +71,10 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.focus.FocusManager
-import androidx.compose.ui.graphics.BlurEffect
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -373,8 +365,8 @@ internal fun SearchFilterBar(
 }
 
 /**
- * Unselected chips leave the way a nav tab does: 150ms fade and a 12dp blur.
- * The selected chip stays. Glass is not put in a shared-element overlay.
+ * The parent fold already moves and clips the whole chip row. Individual chips
+ * only fade, avoiding a second set of width animations and per-chip blur layers.
  */
 @Composable
 private fun FilterChipSlot(
@@ -382,38 +374,18 @@ private fun FilterChipSlot(
     compact: Boolean,
     content: @Composable () -> Unit,
 ) {
-    // One chip stays in the bar. Everything else, selected or not, leaves.
     if (keep) {
         content()
         return
     }
     val reduced = rememberReducedMotion()
-    val motion = if (reduced) snap() else tween<Float>(150, easing = FastOutSlowInEasing)
-    val sizeMotion = if (reduced) snap() else tween<androidx.compose.ui.unit.IntSize>(150, easing = FastOutSlowInEasing)
+    val motion = if (reduced) snap() else tween<Float>(110, easing = FastOutSlowInEasing)
     AnimatedVisibility(
         visible = !compact,
-        enter = fadeIn(motion) + expandHorizontally(sizeMotion),
-        exit = fadeOut(motion) + shrinkHorizontally(sizeMotion),
+        enter = fadeIn(motion),
+        exit = fadeOut(motion),
     ) {
-        val blurPx = with(LocalDensity.current) { 12.dp.toPx() }
-        val blur by transition.animateFloat(
-            transitionSpec = {
-                keyframes {
-                    durationMillis = 150
-                    if (targetState == EnterExitState.Visible) {
-                        blurPx atFraction 0.5f using FastOutSlowInEasing
-                        0f atFraction 0.8f
-                    }
-                }
-            },
-        ) { state ->
-            if (state == EnterExitState.Visible) 0f else blurPx
-        }
-        Box(
-            Modifier.graphicsLayer {
-                renderEffect = if (blur > 0f) BlurEffect(blur, blur) else null
-            },
-        ) { content() }
+        content()
     }
 }
 
