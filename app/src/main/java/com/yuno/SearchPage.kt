@@ -3,6 +3,8 @@ package com.yuno
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -365,8 +367,8 @@ internal fun SearchFilterBar(
 }
 
 /**
- * The parent fold already moves and clips the whole chip row. Individual chips
- * only fade, avoiding a second set of width animations and per-chip blur layers.
+ * The parent fold owns the row's width and position. Each chip keeps a small
+ * fade-and-scale transition, without animating its measured width or applying blur.
  */
 @Composable
 private fun FilterChipSlot(
@@ -379,11 +381,11 @@ private fun FilterChipSlot(
         return
     }
     val reduced = rememberReducedMotion()
-    val motion = if (reduced) snap() else tween<Float>(110, easing = FastOutSlowInEasing)
+    val motion = if (reduced) snap() else tween<Float>(140, easing = FastOutSlowInEasing)
     AnimatedVisibility(
         visible = !compact,
-        enter = fadeIn(motion),
-        exit = fadeOut(motion),
+        enter = fadeIn(motion) + scaleIn(initialScale = 0.96f, animationSpec = motion),
+        exit = fadeOut(motion) + scaleOut(targetScale = 0.96f, animationSpec = motion),
     ) {
         content()
     }
