@@ -99,21 +99,36 @@ fun DescriptionPanel(state: PlayerState, partialTop: Dp, onClose: () -> Unit) {
             }
 
             Spacer(Modifier.height(18.dp))
-            LinkedText(
-                text = details.description,
-                links = details.descriptionLinks,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(c.surfaceContainer)
-                    .padding(16.dp),
-                style = androidx.compose.material3.LocalTextStyle.current.copy(
-                    color = c.onSurface,
+            if (details.description.isNotBlank()) {
+                LinkedText(
+                    text = details.description,
+                    links = details.descriptionLinks,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(c.surfaceContainer)
+                        .padding(16.dp),
+                    style = androidx.compose.material3.LocalTextStyle.current.copy(
+                        color = c.onSurface,
+                        fontSize = 14.sp,
+                        lineHeight = 21.sp,
+                        fontWeight = FontWeight.Medium,
+                    ),
+                )
+            } else {
+                Text(
+                    stringResource(R.string.player_live_description_empty),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(c.surfaceContainer)
+                        .padding(16.dp),
+                    color = c.onSurfaceVariant,
                     fontSize = 14.sp,
                     lineHeight = 21.sp,
                     fontWeight = FontWeight.Medium,
-                ),
-            )
+                )
+            }
             Spacer(Modifier.height(16.dp))
             Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
         }
