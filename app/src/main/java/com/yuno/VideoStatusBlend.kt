@@ -121,27 +121,28 @@ object VideoTopSampler {
         }
         frame = target.asImageBitmap()
     }
+
+    private fun averageLuminance(bitmap: Bitmap): Float {
+        val w = bitmap.width
+        val h = bitmap.height
+        val n = w * h
+        if (n == 0) return 0f
+        val row = luminanceRow.takeIf { it.size == w } ?: IntArray(w).also { luminanceRow = it }
+        var sum = 0f
+        for (y in 0 until h) {
+            bitmap.getPixels(row, 0, w, 0, y, w, 1)
+            for (x in 0 until w) {
+                val c = row[x]
+                val r = (c shr 16 and 0xFF) / 255f
+                val g = (c shr 8 and 0xFF) / 255f
+                val b = (c and 0xFF) / 255f
+                sum += 0.2126f * r + 0.7152f * g + 0.0722f * b
+            }
+        }
+        return sum / n
+    }
 }
 
-private fun averageLuminance(bitmap: Bitmap): Float {
-    val w = bitmap.width
-    val h = bitmap.height
-    val n = w * h
-    if (n == 0) return 0f
-    val row = luminanceRow.takeIf { it.size == w } ?: IntArray(w).also { luminanceRow = it }
-    var sum = 0f
-    for (y in 0 until h) {
-        bitmap.getPixels(row, 0, w, 0, y, w, 1)
-        for (x in 0 until w) {
-            val c = row[x]
-            val r = (c shr 16 and 0xFF) / 255f
-            val g = (c shr 8 and 0xFF) / 255f
-            val b = (c and 0xFF) / 255f
-            sum += 0.2126f * r + 0.7152f * g + 0.0722f * b
-        }
-    }
-    return sum / n
-}
 
 /**
  * The status-bar strip for a video that hasn't drawn yet: the top of its thumbnail.
