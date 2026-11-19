@@ -277,7 +277,7 @@ fun PlayerScreen(
                             YouTube.uploadedLabel(statsItem)?.ifBlank { null }?.takeIf { details?.live != true },
                             details?.likes?.takeIf { it > 0 }?.let { plural(R.plurals.player_likes, it, formatCount(it)) },
                         ).joinDots()
-                        val hasDescription = !details?.description.isNullOrBlank()
+                        val hasDescription = !details?.description.isNullOrBlank() || details?.live == true
                         Row(
                             modifier = if (hasDescription) Modifier.pressable(pressedScale = 0.98f) { state.sheet = PlayerSheet.Description } else Modifier,
                         ) {
