@@ -391,7 +391,7 @@ fun LazyListScope.videoCards(
 ) {
     val videos = if (videos.any(Dismissed::hides)) videos.filterNot(Dismissed::hides) else videos
     if (columns <= 1) {
-        items(videos, key = { it.id }, contentType = { "video" }, contentType = { "video" }) { video -> VideoCard(video, onClick = { onOpen(video) }, metaColor = metaColor) }
+        items(videos, key = { it.id }, contentType = { "video" }) { video -> VideoCard(video, onClick = { onOpen(video) }, metaColor = metaColor) }
         return
     }
     val cells: List<Any> = if (extra != null && videos.isNotEmpty()) videos.take(1) + ExtraCell + videos.drop(1) else videos

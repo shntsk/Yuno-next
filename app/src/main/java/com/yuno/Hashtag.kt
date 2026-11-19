@@ -91,10 +91,10 @@ fun HashtagScreen(
                 }
             }
             item(key = "hashtag-tabs") {
-                UnderlineTabs(
-                    labels = tabLabels,
-                    selected = state.selectedTab,
-                    onPick = state::selectTab,
+                PillSegmentedControl(
+                    options = tabLabels,
+                    selectedIndex = state.selectedTab,
+                    onSelect = state::selectTab,
                     modifier = Modifier.padding(horizontal = PageGutter),
                 )
             }
