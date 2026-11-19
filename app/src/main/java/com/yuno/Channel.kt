@@ -1328,12 +1328,17 @@ private fun LazyListScope.channelPlaylistItems(
         items(playlists, key = { it.id }) { p -> ChannelPlaylistCard(p, palette) { onOpen(p) } }
         return
     }
-    items(playlists.chunked(columns), key = { row -> row.first().id }) { row ->
+    val rowCount = (playlists.size + columns - 1) / columns
+    items(rowCount, key = { row -> playlists[row * columns].id }) { row ->
         Row(Modifier.fillMaxWidth().padding(horizontal = 5.dp)) {
-            row.forEach { p ->
-                Box(Modifier.weight(1f)) { ChannelPlaylistCard(p, palette) { onOpen(p) } }
+            repeat(columns) { column ->
+                val playlist = playlists.getOrNull(row * columns + column)
+                if (playlist != null) {
+                    Box(Modifier.weight(1f)) { ChannelPlaylistCard(playlist, palette) { onOpen(playlist) } }
+                } else {
+                    Spacer(Modifier.weight(1f))
+                }
             }
-            repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
         }
     }
 }
