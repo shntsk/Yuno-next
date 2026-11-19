@@ -337,28 +337,28 @@ internal fun SearchFilterBar(
         types.forEach { type ->
             val selected = filter.contentType == type
             // The folded bar keeps this one chip. A second selected filter leaves with the rest.
-            FilterChipSlot(keep = selected, compact = compact) {
-                SearchChromeChip(stringResource(type.label()), selected, onExpand, matchButtons = selected) {
+            FilterChipSlot(keep = selected, compact = compact) { animating ->
+                SearchChromeChip(stringResource(type.label()), selected, onExpand, matchButtons = selected, lightweight = animating) {
                     onFilterChange(filter.copy(contentType = type))
                 }
             }
         }
         if (videoFilters) {
             val recent = filter.uploadDate == UploadDate.THIS_WEEK
-            FilterChipSlot(keep = false, compact = compact) {
-                SearchChromeChip(stringResource(R.string.ui_search_recent), recent, onExpand) {
+            FilterChipSlot(keep = false, compact = compact) { animating ->
+                SearchChromeChip(stringResource(R.string.ui_search_recent), recent, onExpand, lightweight = animating) {
                     onFilterChange(filter.copy(uploadDate = if (recent) UploadDate.ANY else UploadDate.THIS_WEEK))
                 }
             }
             val unwatched = filter.watchState == WatchState.UNWATCHED
-            FilterChipSlot(keep = false, compact = compact) {
-                SearchChromeChip(stringResource(R.string.ui_search_unwatched), unwatched, onExpand) {
+            FilterChipSlot(keep = false, compact = compact) { animating ->
+                SearchChromeChip(stringResource(R.string.ui_search_unwatched), unwatched, onExpand, lightweight = animating) {
                     onFilterChange(filter.copy(watchState = if (unwatched) WatchState.ANY else WatchState.UNWATCHED))
                 }
             }
             val watched = filter.watchState == WatchState.WATCHED
-            FilterChipSlot(keep = false, compact = compact) {
-                SearchChromeChip(stringResource(R.string.ui_search_watched), watched, onExpand) {
+            FilterChipSlot(keep = false, compact = compact) { animating ->
+                SearchChromeChip(stringResource(R.string.ui_search_watched), watched, onExpand, lightweight = animating) {
                     onFilterChange(filter.copy(watchState = if (watched) WatchState.ANY else WatchState.WATCHED))
                 }
             }
@@ -374,10 +374,10 @@ internal fun SearchFilterBar(
 private fun FilterChipSlot(
     keep: Boolean,
     compact: Boolean,
-    content: @Composable () -> Unit,
+    content: @Composable (animating: Boolean) -> Unit,
 ) {
     if (keep) {
-        content()
+        content(false)
         return
     }
     val reduced = rememberReducedMotion()
@@ -387,7 +387,8 @@ private fun FilterChipSlot(
         enter = fadeIn(motion) + scaleIn(initialScale = 0.96f, animationSpec = motion),
         exit = fadeOut(motion) + scaleOut(targetScale = 0.96f, animationSpec = motion),
     ) {
-        content()
+        // currentState/targetState change at transition boundaries, not on every animation frame.
+        content(transition.currentState != transition.targetState)
     }
 }
 
@@ -401,6 +402,7 @@ private fun SearchChromeChip(
     selected: Boolean,
     onExpand: () -> Unit,
     matchButtons: Boolean = false,
+    lightweight: Boolean = false,
     onClick: () -> Unit,
 ) {
     val glass = LocalLiquidGlassEnabled.current && isGlassSupported()
@@ -415,7 +417,13 @@ private fun SearchChromeChip(
     Row(
         Modifier
             .height(height)
-            .floatingChrome(CircleShape)
+            .then(
+                if (lightweight) {
+                    Modifier.lightweightLiquidGlass(CircleShape, MaterialTheme.colorScheme.surface)
+                } else {
+                    Modifier.floatingChrome(CircleShape)
+                },
+            )
             .pressable(onClick = { if (compact) onExpand() else onClick() })
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
