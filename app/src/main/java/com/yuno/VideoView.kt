@@ -624,8 +624,6 @@ fun VideoContent(
                         )
                         .graphicsLayer { translationY = (1f - visibleAlphaState.value) * 10.dp.toPx() },
                 ) {
-                    val lockedLive = state.live && !state.liveDvr
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     val shownMs = state.scrubPreviewMs ?: state.positionMs
                     val lockedLive = state.live && !state.liveDvr
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -641,18 +639,6 @@ fun VideoContent(
                                 LiveChip(state.durationMs - state.positionMs <= 20_000) { touched(); state.jumpToLiveEdge() }
                             }
                         }
-                        state.askSegment?.let { segment ->
-                            SkipSegmentPill(segment, enabled = true) { touched(); state.skipSegment(segment) }
-                        }
-                        if (state.queue.isNotEmpty()) {
-                            OverlayTile(stringResource(R.string.video_next), enabled, 34.dp, onClick = { touched(); state.playNextUp() }) { ink ->
-                                Icon(Icons.Rounded.SkipNext, null, tint = ink, modifier = Modifier.size(20.dp))
-                            }
-                        }
-                        OverlayTile(stringResource(if (fullscreen) R.string.video_exit_fullscreen else R.string.video_fullscreen), enabled, 34.dp, onClick = onToggleFullscreen) { ink ->
-                            Icon(if (fullscreen) Icons.Rounded.FullscreenExit else Icons.Rounded.Fullscreen, null, tint = ink, modifier = Modifier.size(21.dp))
-                        }
-                    }
                         state.askSegment?.let { segment ->
                             SkipSegmentPill(segment, enabled = true) { touched(); state.skipSegment(segment) }
                         }
@@ -706,8 +692,8 @@ fun VideoContent(
             val lockedLive = state.live && !state.liveDvr
             Scrubber(
                 segments = if (lockedLive) emptyList() else segments,
-                positionMs = if (lockedLive) 1L else state.positionMs,
-                bufferedMs = if (lockedLive) 1L else state.bufferedMs,
+                positionMs = { if (lockedLive) 1L else state.positionMs },
+                bufferedMs = { if (lockedLive) 1L else state.bufferedMs },
                 durationMs = if (lockedLive) 1L else state.durationMs,
                 enabled = interactive && !lockedLive,
                 active = scrubActive,
