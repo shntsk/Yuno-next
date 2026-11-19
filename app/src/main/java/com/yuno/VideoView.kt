@@ -1114,7 +1114,7 @@ private fun OverlayTile(
     enabled: Boolean,
     size: Dp,
     filled: Boolean = false,
-    tile: Color = MaterialTheme.colorScheme.surfaceVariant,
+    tile: Color = Color.Black.copy(alpha = 0.36f),
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     content: @Composable (ink: Color) -> Unit,
@@ -1127,10 +1127,10 @@ private fun OverlayTile(
             .size(size)
             .pressable(enabled = enabled) { view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK); onClick() }
             .clip(CircleShape)
-            .background(if (filled) c.primary else tile)
+            .background(if (filled) c.primary.copy(alpha = 0.88f) else tile)
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center,
-    ) { content(if (filled) c.onPrimary else c.onSurface) }
+    ) { content(if (filled) c.onPrimary else Color.White) }
 }
 
 /** A worded control on the video (speed, quality): a capsule [height] tall, otherwise [OverlayTile]'s look. */
@@ -1157,7 +1157,7 @@ private fun OverlayPill(
     enabled: Boolean,
     height: Dp,
     filled: Boolean = false,
-    tile: Color = MaterialTheme.colorScheme.surfaceVariant,
+    tile: Color = Color.Black.copy(alpha = 0.36f),
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
@@ -1170,18 +1170,18 @@ private fun OverlayPill(
             .widthIn(min = height)
             .pressable(enabled = enabled) { view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK); onClick() }
             .clip(CircleShape)
-            .background(if (filled) c.primary else tile)
+            .background(if (filled) c.primary.copy(alpha = 0.88f) else tile)
             .padding(horizontal = 11.dp)
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, color = if (filled) c.onPrimary else c.onSurface, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1)
+        Text(label, color = if (filled) c.onPrimary else Color.White, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1)
     }
 }
 
 /** −10 / +10 on the video, as on the pill: the arrow kicks the way it seeks. */
 @Composable
-private fun OverlaySeek(side: Int, enabled: Boolean, size: Dp, tile: Color = MaterialTheme.colorScheme.surfaceVariant, onSeek: () -> Unit) {
+private fun OverlaySeek(side: Int, enabled: Boolean, size: Dp, tile: Color = Color.Black.copy(alpha = 0.36f), onSeek: () -> Unit) {
     val c = MaterialTheme.colorScheme
     val view = LocalView.current
     val scope = rememberCoroutineScope()
@@ -1202,7 +1202,7 @@ private fun OverlaySeek(side: Int, enabled: Boolean, size: Dp, tile: Color = Mat
         Icon(
             seekIcon(forward = side > 0),
             contentDescription = seekLabel(side),
-            tint = c.onSurface,
+            tint = Color.White,
             modifier = Modifier.size(size * 0.51f).graphicsLayer { rotationZ = spin.value },
         )
     }
@@ -1218,7 +1218,7 @@ private fun OverlayPlay(playing: Boolean, buffering: Boolean, size: Dp, enabled:
             .size(size)
             .pressable(enabled = enabled) { view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK); onClick() }
             .clip(CircleShape)
-            .background(c.primary),
+            .background(c.primary.copy(alpha = 0.9f)),
         contentAlignment = Alignment.Center,
     ) {
         if (buffering) {
