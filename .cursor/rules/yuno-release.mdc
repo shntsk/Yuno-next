@@ -1,0 +1,26 @@
+---
+description: How to ship a Yuno release — draft the notes and the version together, then publish
+alwaysApply: true
+---
+
+# Releasing Yuno
+
+Do these in order. Stop after each step until the user says to go on.
+
+1. **Draft.** Write the notes under `## Unreleased` in `CHANGELOG.md`, in the same shape as 1.0.0: the banner, then `### New`, `### Improved`, and `### Miscellaneous`. One or two short lines per change, written for someone using the app. In the same message, say what the version should become and why. A fix on the current release is the next patch (`1.1.1`). New features on the same app are the next minor (`1.1.0`, `1.2.0`). A different app is the next major. `versionCode` in `app/build.gradle.kts` goes up by 1. Show the draft and the version together. Do not bump the version and do not publish. Wait for a yes.
+2. **Publish.** Only after they confirm: set `versionName` and `versionCode`, then run `scripts/publish-apk.sh` so the production APK and those notes go to GitHub. Do not install that APK on the phone.
+
+```markdown
+## Unreleased
+
+![Yuno](https://github.com/danielkanan/Yuno/raw/main/docs/banner.png?v=2)
+
+### New
+- One thing someone would notice.
+
+### Improved
+- One thing that already existed and now works better.
+
+### Miscellaneous
+- One thing that is neither new nor a fix.
+```

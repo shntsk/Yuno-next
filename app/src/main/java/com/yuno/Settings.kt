@@ -31,7 +31,6 @@ import androidx.compose.material.icons.rounded.BugReport
 import androidx.compose.material.icons.rounded.ClosedCaption
 import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.DarkMode
-import androidx.compose.material.icons.rounded.Headphones
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Notifications
@@ -44,7 +43,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -60,11 +58,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.yuno.icons.SfIcons
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -93,18 +88,6 @@ enum class SettingsPage(@StringRes val titleRes: Int, val icon: ImageVector) {
 
 private const val SourceUrl = "https://github.com/danielkanan/Yuno"
 
-/** BitChord's settings type scale, drawn in this app's face. */
-private val SettingsTypography = Typography(
-    displayLarge = TextStyle(fontFamily = SfProDisplay, fontWeight = FontWeight.W800, fontSize = 34.sp, letterSpacing = (-0.5).sp),
-    headlineLarge = TextStyle(fontFamily = SfProDisplay, fontWeight = FontWeight.W800, fontSize = 30.sp, letterSpacing = (-0.4).sp),
-    headlineMedium = TextStyle(fontFamily = SfProDisplay, fontWeight = FontWeight.W700, fontSize = 22.sp, letterSpacing = (-0.25).sp),
-    titleLarge = TextStyle(fontFamily = SfProDisplay, fontWeight = FontWeight.W700, fontSize = 20.sp, letterSpacing = (-0.2).sp),
-    titleMedium = TextStyle(fontFamily = SfProDisplay, fontWeight = FontWeight.W600, fontSize = 16.sp, letterSpacing = 0.05.sp),
-    bodyLarge = TextStyle(fontFamily = SfProDisplay, fontWeight = FontWeight.W400, fontSize = 16.sp, letterSpacing = 0.2.sp),
-    bodyMedium = TextStyle(fontFamily = SfProDisplay, fontWeight = FontWeight.W400, fontSize = 14.sp, letterSpacing = 0.3.sp),
-    labelMedium = TextStyle(fontFamily = SfProDisplay, fontWeight = FontWeight.W600, fontSize = 12.sp, letterSpacing = 0.25.sp),
-    labelSmall = TextStyle(fontFamily = SfProDisplay, fontWeight = FontWeight.W600, fontSize = 11.sp, letterSpacing = 0.3.sp),
-)
 
 @Composable
 fun SettingsScreen(
@@ -126,7 +109,7 @@ fun SettingsScreen(
     }
     val ime = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
 
-    MaterialTheme(colorScheme = c, typography = SettingsTypography, shapes = MaterialTheme.shapes) {
+    MaterialTheme(colorScheme = c, typography = BitChordTypography, shapes = MaterialTheme.shapes) {
         CompositionLocalProvider(LocalTextStyle provides MaterialTheme.typography.bodyLarge.merge(OwnDirectionText)) {
             Column(
                 Modifier
@@ -294,11 +277,6 @@ private fun PlaybackBody(player: PlayerState, search: SettingsSearch) {
         row(zoomTitle, zoomLine, "pinch", "fullscreen") {
             ToggleRow(Icons.Rounded.ZoomOutMap, zoomTitle, zoomLine, FullscreenZoom.fill) { player.setZoomFillSetting(it) }
         }
-        val audioTitle = stringResource(R.string.bar_audio_only)
-        val audioLine = stringResource(R.string.settings_audio_only_line)
-        row(audioTitle, audioLine) {
-            ToggleRow(Icons.Rounded.Headphones, audioTitle, audioLine, AudioOnly.enabled) { player.setAudioOnly(it) }
-        }
     }
 }
 
@@ -430,6 +408,11 @@ private fun AppearanceBody(search: SettingsSearch) {
                 listOf("system", "light", "dark").map { modeLabel(it) },
                 listOf("system", "light", "dark").indexOf(ThemeSettings.mode).coerceAtLeast(0),
             ) { ThemeSettings.chooseMode(listOf("system", "light", "dark")[it]) }
+        }
+        val colorTitle = stringResource(R.string.settings_channel_colors)
+        val colorLine = stringResource(R.string.settings_channel_colors_line)
+        row(colorTitle, colorLine) {
+            ToggleRow(SfIcons.Palette, colorTitle, colorLine, ChannelColorSetting.enabled, onCheckedChange = ChannelColorSetting::set)
         }
         if (isGlassSupported()) {
             val glassTitle = stringResource(R.string.settings_liquid_glass)

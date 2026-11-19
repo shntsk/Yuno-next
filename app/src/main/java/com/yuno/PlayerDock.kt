@@ -87,6 +87,24 @@ class PlayerDock {
         poseReady = false
     }
 
+    /**
+     * Thumbnail the open animation grows out of, in screen pixels. Set for a tap on a
+     * video; null when the player opens with no picture to start from (a notification,
+     * Play on a playlist). Cleared once that open has settled.
+     */
+    var launchFrom by mutableStateOf<Rect?>(null)
+    var launchRadiusPx by mutableFloatStateOf(0f)
+
+    fun armFromPage(rect: Rect?, radiusPx: Float) {
+        launchFrom = rect
+        launchRadiusPx = radiusPx
+    }
+
+    fun finishLaunch() {
+        launchFrom = null
+        launchRadiusPx = 0f
+    }
+
     internal fun offset(): Float? = sheetOffset?.invoke()?.takeUnless { it.isNaN() }
 
     fun openFraction(): Float {
@@ -119,3 +137,28 @@ class PlayerDock {
 }
 
 val LocalPlayerDock = staticCompositionLocalOf<PlayerDock?> { null }
+
+/**
+ * The thumbnail a tap is about to open, recorded before [PlayerState.open] so the
+ * player can grow out of that picture instead of the mini player.
+ */
+object VideoLaunch {
+    private var rect: Rect? = null
+    private var radiusPx = 0f
+
+    fun offer(rect: Rect, radiusPx: Float) {
+        this.rect = rect
+        this.radiusPx = radiusPx
+    }
+
+    fun take(): Pair<Rect, Float>? {
+        val taken = rect ?: return null
+        val radius = radiusPx
+        rect = null
+        return taken to radius
+    }
+
+    fun clear() {
+        rect = null
+    }
+}

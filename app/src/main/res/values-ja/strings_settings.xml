@@ -17,7 +17,6 @@
     <string name="settings_speed_remember_off">各動画は 1× で始まります</string>
     <string name="settings_speed_kept_summary">速度 %1$s× を維持</string>
     <string name="settings_speed_per_video">速度は動画ごと</string>
-    <string name="settings_audio_only_line">すべての動画で映像なしの音声のみ。プレーヤーのバーにもあります。</string>
     <string name="settings_sb_summary">%1$s 件をスキップ、%2$s 件は確認</string>
     <string name="settings_mode">モード</string>
     <string name="settings_theme">テーマ</string>

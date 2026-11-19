@@ -23,7 +23,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ClosedCaption
-import androidx.compose.material.icons.rounded.Headphones
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.SkipNext
@@ -76,7 +75,7 @@ private val OneRowMin = 660.dp
  * Tabletop (Rail 3, Derek 2026-11-02): an open foldable stood half open on a table, its fold running
  * across. The video fills the top half; the bottom half, always pure black, is the deck: the time and
  * chapter, a wide scrub surface of storyboard frames you drag across anywhere (seeks on release, a tap
- * jumps), and the transport with plain buttons — speed, quality, −10, play, +10, captions, audio only,
+ * jumps), and the transport with plain buttons — speed, quality, −10, play, +10, captions,
  * next. No player bar, no pill. On a narrow deck (a Flip, 2026-11-04) the tools take a second row.
  * [foldTop] / [foldBottom]: the fold's edges from the window's top.
  */
@@ -87,11 +86,9 @@ fun TabletopPlayer(player: PlayerState, foldTop: Dp, foldBottom: Dp) {
         // Top half: the picture, as big as it fits.
         Box(Modifier.fillMaxWidth().height(foldTop), contentAlignment = Alignment.Center) {
             Box(Modifier.fillMaxSize().aspectFit(player.videoAspect)) {
-                if (AudioOnly.enabled || player.hidesStaleVideo) Thumbnail(item.thumbnail, Modifier.fillMaxSize(), radius = 0)
-                if (!AudioOnly.enabled) {
-                    val surface = LocalVideoSurface.current
-                    Box(Modifier.fillMaxSize().graphicsLayer { alpha = if (player.hidesStaleVideo) 0f else 1f }) { surface(Modifier.fillMaxSize()) }
-                }
+                if (player.hidesStaleVideo) Thumbnail(item.thumbnail, Modifier.fillMaxSize(), radius = 0)
+                val surface = LocalVideoSurface.current
+                Box(Modifier.fillMaxSize().graphicsLayer { alpha = if (player.hidesStaleVideo) 0f else 1f }) { surface(Modifier.fillMaxSize()) }
                 CaptionLayer(player, bottom = 10.dp)
             }
             if (player.isBuffering) CircularProgressIndicator(color = DeckInk, strokeWidth = 4.dp, modifier = Modifier.size(40.dp))
@@ -234,7 +231,7 @@ private fun DeckButtons(player: PlayerState) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 SpeedKey(player); QualityKey(player)
                 Transport(player)
-                CaptionsKey(player); AudioOnlyKey(player); NextKey(player)
+                CaptionsKey(player); NextKey(player)
             }
         } else {
             // A Flip: the transport alone and big, the tools under it with their words whole.
@@ -243,7 +240,7 @@ private fun DeckButtons(player: PlayerState) {
                 Spacer(Modifier.height(20.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     SpeedKey(player, tall = true); QualityKey(player, tall = true)
-                    CaptionsKey(player, tall = true); AudioOnlyKey(player, tall = true); NextKey(player, tall = true)
+                    CaptionsKey(player, tall = true); NextKey(player, tall = true)
                 }
             }
         }
@@ -286,12 +283,6 @@ private fun RowScope.CaptionsKey(player: PlayerState, tall: Boolean = false) =
         player.captions.turn(true)
         player.sheet = PlayerSheet.Captions
     }) { Icon(Icons.Rounded.ClosedCaption, null, tint = it, modifier = Modifier.size(24.dp)) }
-
-@Composable
-private fun RowScope.AudioOnlyKey(player: PlayerState, tall: Boolean = false) =
-    DeckKeyButton(label = stringResource(R.string.bar_audio_only), on = AudioOnly.enabled, tall = tall, onClick = { player.setAudioOnly(!AudioOnly.enabled) }) {
-        Icon(Icons.Rounded.Headphones, null, tint = it, modifier = Modifier.size(24.dp))
-    }
 
 @Composable
 private fun RowScope.NextKey(player: PlayerState, tall: Boolean = false) {

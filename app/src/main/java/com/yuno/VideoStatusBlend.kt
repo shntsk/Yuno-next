@@ -2,6 +2,7 @@ package com.yuno
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -10,11 +11,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import coil.imageLoader
+import coil.request.ImageRequest
+import coil.request.SuccessResult
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.BlurredEdgeTreatment
@@ -45,6 +51,9 @@ object VideoTopSampler {
     var statusBarPx by mutableIntStateOf(0)
     private var running = false
     private var scratch: Bitmap? = null
+    private var posterEpoch = 0
+    /** Real frames stay hidden until this video's own first frame, so the last video's strip can't linger. */
+    private var acceptLive = true
 
     fun start() {
         running = true
@@ -54,9 +63,33 @@ object VideoTopSampler {
         running = false
     }
 
-    /** Called on every main-player frame ([TextureView.onSurfaceTextureUpdated]). */
+    /** Drop the strip on screen. The next picture is this video's thumbnail, then its own frame. */
+    fun holdForPoster() {
+        posterEpoch++
+        acceptLive = false
+        frame = null
+        topLuminance = 0f
+    }
+
+    fun currentPosterEpoch(): Int = posterEpoch
+
+    /** The new video has drawn. The next texture update replaces the thumbnail strip immediately. */
+    fun releaseLive() {
+        acceptLive = true
+        if (running && statusBarPx > 0) tick()
+    }
+
+    fun showPosterStrip(strip: Bitmap, epoch: Int) {
+        if (epoch != posterEpoch || acceptLive) {
+            strip.recycle()
+            return
+        }
+        publish(strip)
+    }
+
+    /** Called on every main-player frame ([android.view.TextureView.onSurfaceTextureUpdated]). */
     fun onVideoFrame() {
-        if (!running || statusBarPx <= 0) return
+        if (!running || !acceptLive || statusBarPx <= 0) return
         tick()
     }
 
@@ -64,6 +97,10 @@ object VideoTopSampler {
         val barPx = statusBarPx
         if (barPx <= 0) return
         val fresh = SharedVideoTexture.captureStatusStrip(barPx) ?: return
+        publish(fresh)
+    }
+
+    private fun publish(fresh: Bitmap) {
         val target = scratch?.takeIf { it.width == fresh.width && it.height == fresh.height }
             ?: Bitmap.createBitmap(fresh.width, fresh.height, Bitmap.Config.ARGB_8888).also { scratch = it }
         Canvas(target).drawBitmap(fresh, 0f, 0f, null)
@@ -94,6 +131,35 @@ private fun averageLuminance(bitmap: Bitmap): Float {
         }
     }
     return sum / n
+}
+
+/**
+ * The status-bar strip for a video that hasn't drawn yet: the top of its thumbnail.
+ * [VideoTopSampler.releaseLive] swaps in the real frame with no fade.
+ */
+@Composable
+internal fun BindVideoTopPoster(videoId: String?, url: String?, statusBarPx: Int, videoHeightPx: Int) {
+    val context = LocalContext.current
+    LaunchedEffect(videoId, url, statusBarPx, videoHeightPx) {
+        if (videoId == null || url.isNullOrBlank() || statusBarPx <= 0 || videoHeightPx <= 0) return@LaunchedEffect
+        val epoch = VideoTopSampler.currentPosterEpoch()
+        val request = ImageRequest.Builder(context)
+            .data(url)
+            .allowHardware(false)
+            .build()
+        val result = context.imageLoader.execute(request)
+        val source = ((result as? SuccessResult)?.drawable as? BitmapDrawable)?.bitmap ?: return@LaunchedEffect
+        if (source.width < 1 || source.height < 1) return@LaunchedEffect
+        val fraction = (statusBarPx.toFloat() / videoHeightPx).coerceIn(0.02f, 0.45f)
+        val band = (source.height * fraction).toInt().coerceIn(1, source.height)
+        val strip = runCatching {
+            val raw = Bitmap.createBitmap(source, 0, 0, source.width, band)
+            val copy = raw.copy(Bitmap.Config.ARGB_8888, true)
+            if (copy !== raw) raw.recycle()
+            copy
+        }.getOrNull() ?: return@LaunchedEffect
+        VideoTopSampler.showPosterStrip(strip, epoch)
+    }
 }
 
 /** Blurred duplicate of the video top, drawn only in the status-bar strip. */

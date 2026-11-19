@@ -35,7 +35,17 @@ data class ChannelRef(val id: String, val name: String, val avatar: String?)
  * YouTube put over the feed (Home's first page only; empty everywhere else).
  */
 @Immutable
-data class FeedPage(val videos: List<VideoItem>, val next: String?, val chips: List<FeedChip> = emptyList())
+data class FeedPage(
+    val videos: List<VideoItem>,
+    val next: String?,
+    val chips: List<FeedChip> = emptyList(),
+    val filters: List<ChannelFilterGroup> = emptyList(),
+    /** A playlist's first page only. Flow's `VideoPlaylistPage` owner and description. */
+    val playlistHeader: PlaylistHeaderInfo? = null,
+)
+
+/** The playlist header Flow reads off the browse: the owner, and the description when YouTube sent one. */
+data class PlaylistHeaderInfo(val owner: String?, val description: String)
 
 /**
  * One of Home's category chips ("All", "Music", "Gaming", "Recently uploaded"…), titled as
@@ -45,15 +55,51 @@ data class FeedPage(val videos: List<VideoItem>, val next: String?, val chips: L
 @Immutable
 data class FeedChip(val title: String, val token: String?)
 
+/**
+ * One row of a channel tab's filter bar, as Flow reads it. A dropdown is a sheet
+ * (Latest, Popular, Oldest). The other row is ordinary chips (Members only, Public).
+ * [ChannelFilterOption.token] is a continuation, or `browse-params:` plus browse params.
+ */
+@Immutable
+data class ChannelFilterGroup(val dropdown: Boolean, val options: List<ChannelFilterOption>)
+
+@Immutable
+data class ChannelFilterOption(val label: String, val token: String?, val selected: Boolean = false)
+
 /** A page of playlists (a channel's Playlists tab) and the token for the next one. */
 @Immutable
 data class PlaylistPage(val playlists: List<PlaylistRef>, val next: String?)
 
+/** One community post on a channel's Posts tab. */
+@Immutable
+data class CommunityPost(
+    val id: String,
+    val author: String,
+    val avatar: String?,
+    val text: String,
+    val image: String?,
+    val ago: String,
+    val likes: String,
+    val comments: String,
+)
+
+data class PostsPage(val posts: List<CommunityPost>, val next: String?)
+
 /**
- * The channel page's tabs Skipii shows (GitHub #53), by YouTube's English titles. Posts, Store,
- * Playables, Live and the rest hold nothing Skipii plays.
+ * The channel page's tabs, by YouTube's English titles. About is not one of those tabs;
+ * the page appends it. Posts is YouTube's Community tab.
  */
-enum class ChannelTab(val title: String) { Home("Home"), Videos("Videos"), Shorts("Shorts"), Playlists("Playlists") }
+enum class ChannelTab(val title: String) {
+    Home("Home"),
+    Videos("Videos"),
+    Shorts("Shorts"),
+    Live("Live"),
+    Shows("Shows"),
+    Podcasts("Podcasts"),
+    Playlists("Playlists"),
+    Posts("Posts"),
+    About("About"),
+}
 
 /** Where a channel shelf's "See all" goes: one of the channel's tabs, or a playlist page. */
 sealed interface ShelfLink {
@@ -85,6 +131,27 @@ data class ChannelHome(
     val featured: VideoItem?,
     val shelves: List<ChannelShelf>,
     val subscribed: Boolean? = null,
+    /** The channel's @handle, from the page's vanity URL. */
+    val handle: String? = null,
+    /** The About panel (links, and the full description), fetched from the header's continuation. */
+    val about: ChannelAboutInfo? = null,
+)
+
+/** One row of a channel's About panel. [icon] is the site's favicon when YouTube sent one. */
+@Immutable
+data class ChannelLink(val title: String, val display: String, val url: String, val icon: String?)
+
+/** What the About continuation returns. Any field is missing when YouTube didn't send it. */
+@Immutable
+data class ChannelAboutInfo(
+    val description: String? = null,
+    val country: String? = null,
+    val joined: String? = null,
+    val views: String? = null,
+    val videos: String? = null,
+    val subscribers: String? = null,
+    val canonical: String? = null,
+    val links: List<ChannelLink> = emptyList(),
 )
 
 enum class LikeStatus { Like, Dislike, None }
@@ -401,13 +468,46 @@ object InnerTube {
      * first page carries the tab's sort as chips (Latest · Popular · Oldest); a chip's token is a
      * continuation that reloads the list in that order, read like any next page.
      */
-    suspend fun channelVideos(channelId: String, continuation: String? = null): FeedPage = withContext(Dispatchers.IO) {
+    /**
+     * Videos on this channel matching [query]. The same browse as the Videos tab, with YouTube's
+     * search-tab params and the query on the body (Flow's `channelSearch`).
+     */
+    suspend fun channelSearch(channelId: String, query: String, continuation: String? = null): FeedPage = withContext(Dispatchers.IO) {
         val body = if (continuation != null) JSONObject().put("continuation", continuation)
-        else JSONObject().put("browseId", channelId).put("params", CHANNEL_VIDEOS_TAB)
+        else JSONObject().put("browseId", channelId).put("params", "EgZzZWFyY2jyBgQKAloA").put("query", query)
+        parseFeed(postAny("browse", body))
+    }
+
+    suspend fun channelVideos(channelId: String, continuation: String? = null): FeedPage = withContext(Dispatchers.IO) {
+        val params = continuation?.takeIf { it.startsWith(BROWSE_PARAMS) }?.removePrefix(BROWSE_PARAMS)
+        val token = continuation?.takeUnless { it.startsWith(BROWSE_PARAMS) }
+        val body = when {
+            params != null -> JSONObject().put("browseId", channelId).put("params", params)
+            token != null -> JSONObject().put("continuation", token)
+            else -> JSONObject().put("browseId", channelId).put("params", CHANNEL_VIDEOS_TAB)
+        }
         val root = postAny("browse", body)
         val page = parseFeed(root)
-        if (continuation == null) page.copy(chips = parseHomeChips(root)) else page
+        // A continuation page often has no chip bar. The caller keeps the bar it already has.
+        if (token == null) page.copy(chips = parseHomeChips(root), filters = parseChannelFilters(root)) else page
     }
+
+    /** A channel's Live tab: the same browse as Videos, with the streams kept in. */
+    suspend fun channelLive(channelId: String, params: String, continuation: String? = null): FeedPage = withContext(Dispatchers.IO) {
+        val browse = continuation?.takeIf { it.startsWith(BROWSE_PARAMS) }?.removePrefix(BROWSE_PARAMS)
+        val token = continuation?.takeUnless { it.startsWith(BROWSE_PARAMS) }
+        val body = when {
+            browse != null -> JSONObject().put("browseId", channelId).put("params", browse)
+            token != null -> JSONObject().put("continuation", token)
+            else -> JSONObject().put("browseId", channelId).put("params", params)
+        }
+        val root = postAny("browse", body)
+        val page = parseFeed(root, includeLive = true)
+        if (token == null) page.copy(chips = parseHomeChips(root), filters = parseChannelFilters(root)) else page
+    }
+
+    /** A filter option that reloads the tab as a fresh browse, not a continuation. */
+    internal const val BROWSE_PARAMS = "browse-params:"
 
     /** The channel page's Videos tab selector (as on youtube.com, 2026-10-06). */
     private const val CHANNEL_VIDEOS_TAB = "EgZ2aWRlb3PyBgQKAjoA"
@@ -419,7 +519,10 @@ object InnerTube {
      */
     suspend fun channelHome(channelId: String, name: String?, avatar: String?): ChannelHome = withContext(Dispatchers.IO) {
         val root = postAny("browse", JSONObject().put("browseId", channelId))
-        val home = parseChannelHome(root, channelId)
+        val about = root.channelAboutContinuation()?.let { token ->
+            runCatching { parseChannelAbout(postAny("browse", JSONObject().put("continuation", token))) }.getOrNull()
+        }
+        val home = parseChannelHome(root, channelId).copy(about = about)
         if (!Account.signedIn) return@withContext home
         var subscribed: Boolean? = null
         var bell: Boolean? = null
@@ -448,17 +551,299 @@ object InnerTube {
         PlaylistPage(parsePlaylists(root), parseFeed(root).next)
     }
 
+    /** A channel's Posts tab (community), a page at a time. */
+    suspend fun channelPosts(channelId: String, params: String, continuation: String? = null, author: String, avatar: String?): PostsPage = withContext(Dispatchers.IO) {
+        val body = if (continuation != null) JSONObject().put("continuation", continuation)
+        else JSONObject().put("browseId", channelId).put("params", params)
+        parseCommunityPosts(postAny("browse", body), author, avatar)
+    }
+
+    /** `backstagePostRenderer` rows, the same posts Flow's community page reads. */
+    internal fun parseCommunityPosts(root: JSONObject, author: String, avatar: String?): PostsPage {
+        val posts = LinkedHashMap<String, CommunityPost>()
+        var next: String? = null
+        root.walk { key, obj ->
+            if (key == "backstagePostRenderer" || key == "postRenderer") {
+                val id = obj.optString("postId").ifBlank { return@walk }
+                val image = obj.optJSONObject("backstageAttachment")?.collectStrings("url")
+                    ?.lastOrNull { it.contains("ytimg") || it.contains("ggpht") }?.let(::absoluteUrl)
+                posts.putIfAbsent(id, CommunityPost(
+                    id = id,
+                    author = obj.text("authorText")?.ifBlank { null } ?: author,
+                    avatar = obj.optJSONObject("authorThumbnail")?.thumbnails()?.lastOrNull()?.let(::absoluteUrl) ?: avatar,
+                    text = obj.text("contentText").orEmpty(),
+                    image = image,
+                    ago = obj.text("publishedTimeText").orEmpty(),
+                    likes = obj.text("voteCount").orEmpty(),
+                    comments = obj.optJSONObject("actionButtons")
+                        ?.optJSONObject("commentActionButtonsRenderer")
+                        ?.optJSONObject("replyButton")
+                        ?.optJSONObject("buttonRenderer")
+                        ?.text("text").orEmpty(),
+                ))
+            }
+            if ((key == "continuationItemRenderer" || key == "continuationItemViewModel") && next == null) {
+                next = obj.collectStrings("token").firstOrNull()
+            }
+        }
+        return PostsPage(posts.values.toList(), next)
+    }
+
     suspend fun subscriptionsFeed(next: String? = null): FeedPage = withContext(Dispatchers.IO) {
         val body = if (next != null) JSONObject().put("continuation", next) else JSONObject().put("browseId", "FEsubscriptions")
         parseSubscriptionsFeed(post("browse", body))
     }
     suspend fun history(next: String? = null) = browse("FEhistory", next)
 
+    /**
+     * One page of search. Filters and sorting ride in [params] (Flow's `videoSearch`); paging rides
+     * in [continuation]. Anonymous when signed out, the same way guest Home searches.
+     */
+    suspend fun search(query: String, params: String? = null, continuation: String? = null): SearchPage = withContext(Dispatchers.IO) {
+        val body = if (continuation != null) JSONObject().put("continuation", continuation)
+        else JSONObject().put("query", query).apply { if (!params.isNullOrBlank()) put("params", params) }
+        parseSearch(postAny("search", body))
+    }
+
+    /**
+     * Flow's `toSearchResultsPage`: videos, channels, playlists and shelves, in the feed's own
+     * order. A shelf stays a shelf. Walking into it would turn a Shorts strip into ordinary
+     * results, which is not the page YouTube (or Flow) arranged. The walk stays inside the
+     * search feed, not the whole response.
+     */
+    internal fun parseSearch(root: JSONObject): SearchPage {
+        val hits = mutableListOf<SearchHit>()
+        val seen = HashSet<String>()
+        var next: String? = null
+        val entries = root.searchFeedEntries()
+        if (entries.isEmpty()) {
+            val page = parseFeed(root, includeLive = true)
+            return SearchPage(page.videos.map { SearchHit.Video(it) }, page.next)
+        }
+        entries.forEachIndexed { index, entry ->
+            entry.searchContinuation()?.let { if (next == null) next = it }
+            when (val hit = entry.toSearchHit(index)) {
+                null -> Unit
+                is SearchHit.Shelf -> hits += hit
+                else -> if (seen.add(hit.identityKey())) hits += hit
+            }
+        }
+        return SearchPage(hits.foldChannelLatest(), next)
+    }
+
+    private fun JSONObject.searchFeedEntries(): List<JSONObject> {
+        val sectionList = optJSONObject("contents")
+            ?.optJSONObject("twoColumnSearchResultsRenderer")
+            ?.optJSONObject("primaryContents")
+            ?.optJSONObject("sectionListRenderer")
+        if (sectionList != null) return sectionList.optJSONArray("contents").flattenSearchSections()
+        val commands = optJSONArray("onResponseReceivedCommands") ?: return emptyList()
+        val out = mutableListOf<JSONObject>()
+        for (i in 0 until commands.length()) {
+            commands.optJSONObject(i)
+                ?.optJSONObject("appendContinuationItemsAction")
+                ?.optJSONArray("continuationItems")
+                ?.flattenSearchSections()
+                ?.let(out::addAll)
+        }
+        return out
+    }
+
+    /** Flow's `flattenItemSections`: an item section opens into its contents; anything else stays one entry. */
+    private fun JSONArray?.flattenSearchSections(): List<JSONObject> {
+        if (this == null) return emptyList()
+        val out = mutableListOf<JSONObject>()
+        for (i in 0 until length()) {
+            val entry = optJSONObject(i) ?: continue
+            val contents = entry.optJSONObject("itemSectionRenderer")?.optJSONArray("contents")
+            if (contents == null) out += entry
+            else for (j in 0 until contents.length()) contents.optJSONObject(j)?.let(out::add)
+        }
+        return out
+    }
+
+    /** Flow's continuation token: the entry itself, not a token buried in some other renderer. */
+    private fun JSONObject.searchContinuation(): String? =
+        optJSONObject("continuationItemRenderer")
+            ?.optJSONObject("continuationEndpoint")
+            ?.optJSONObject("continuationCommand")
+            ?.optString("token")
+            ?.ifBlank { null }
+            ?: optJSONObject("continuationItemViewModel")?.collectStrings("token")?.firstOrNull()
+
+    /**
+     * One feed entry. From Flow's `toFeedShelf` then `toFeedItem`: a shelf container is a strip,
+     * and anything else is the one renderer it actually is. No walk into its children.
+     */
+    private fun JSONObject.toSearchHit(index: Int): SearchHit? {
+        optJSONObject("gridShelfViewModel")?.let { return it.toGridShelf(index) }
+        val shelf = optJSONObject("shelfRenderer")
+            ?: optJSONObject("reelShelfRenderer")
+            ?: optJSONObject("richShelfRenderer")
+        if (shelf != null) return shelf.toVideoShelf(index)
+        return parseSearchItem()
+    }
+
+    /** Flow's `toGridShelf`: a `gridShelfViewModel` is the Shorts strip. */
+    private fun JSONObject.toGridShelf(index: Int): SearchHit.Shelf? {
+        val videos = optJSONArray("contents").toShelfVideos()
+        val posts = if (videos.isEmpty()) parseCommunityPosts(this, "", null).posts else emptyList()
+        if (videos.isEmpty() && posts.isEmpty()) return null
+        val title = optJSONObject("header")
+            ?.optJSONObject("sectionHeaderViewModel")
+            ?.text("headline")
+            ?.takeIf { it.isNotBlank() }
+        val first = videos.firstOrNull()?.id ?: posts.first().id
+        return SearchHit.Shelf(
+            id = "grid:$index:${title.orEmpty()}:$first",
+            title = title,
+            kind = if (posts.isNotEmpty()) SearchShelfKind.POSTS else SearchShelfKind.SHORTS,
+            videos = videos,
+            posts = posts,
+            collapsedItemCount = jsonInt(opt("minCollapsedItemCount")),
+        )
+    }
+
+    /** Flow's `shelfItems`: a list shelf is videos, never a Shorts grid. */
+    private fun JSONObject.toVideoShelf(index: Int): SearchHit.Shelf? {
+        val videos = shelfItemNodes().toShelfVideos()
+        val posts = if (videos.isEmpty()) parseCommunityPosts(this, "", null).posts else emptyList()
+        if (videos.isEmpty() && posts.isEmpty()) return null
+        val title = text("title")?.takeIf { it.isNotBlank() }
+        val first = videos.firstOrNull()?.id ?: posts.first().id
+        return SearchHit.Shelf(
+            id = "shelf:$index:${title.orEmpty()}:$first",
+            title = title,
+            kind = if (posts.isNotEmpty()) SearchShelfKind.POSTS else SearchShelfKind.VIDEOS,
+            videos = videos,
+            posts = posts,
+            collapsedItemCount = optJSONObject("content")
+                ?.optJSONObject("verticalListRenderer")
+                ?.let { jsonInt(it.opt("collapsedItemCount")) },
+        )
+    }
+
+    /** Flow's `shelfItems` containers, in the same order. */
+    private fun JSONObject.shelfItemNodes(): JSONArray? {
+        optJSONArray("items")?.let { return it }
+        optJSONArray("contents")?.let { return it }
+        val content = optJSONObject("content") ?: return null
+        content.optJSONObject("verticalListRenderer")?.optJSONArray("items")?.let { return it }
+        return content.optJSONObject("horizontalListRenderer")?.optJSONArray("items")
+            ?: content.optJSONObject("expandedShelfContentsRenderer")?.optJSONArray("items")
+            ?: content.optJSONObject("gridRenderer")?.optJSONArray("items")
+    }
+
+    private fun JSONArray?.toShelfVideos(): List<VideoItem> {
+        if (this == null) return emptyList()
+        val out = LinkedHashMap<String, VideoItem>()
+        for (i in 0 until length()) {
+            val hit = optJSONObject(i)?.parseSearchItem() as? SearchHit.Video ?: continue
+            out.putIfAbsent(hit.item.id, hit.item)
+        }
+        return out.values.toList()
+    }
+
+    /** Flow's `toFeedItem`: the renderer on this node, or the one inside `richItemRenderer`. */
+    private fun JSONObject.parseSearchItem(): SearchHit? {
+        val content = optJSONObject("richItemRenderer")?.optJSONObject("content") ?: this
+        content.optJSONObject("videoRenderer")?.toSearchVideo()?.let { return it }
+        content.optJSONObject("gridVideoRenderer")?.toSearchVideo()?.let { return it }
+        content.optJSONObject("compactVideoRenderer")?.toSearchVideo()?.let { return it }
+        content.optJSONObject("lockupViewModel")?.let { lockup ->
+            when (lockup.optString("contentType")) {
+                "LOCKUP_CONTENT_TYPE_VIDEO" -> lockup.toSearchLockup()?.let { return it }
+                else -> playlistOf("lockupViewModel", lockup)?.let { return SearchHit.Playlist(it) }
+            }
+        }
+        content.optJSONObject("playlistRenderer")?.let { playlistOf("playlistRenderer", it) }?.let { return SearchHit.Playlist(it) }
+        content.optJSONObject("gridPlaylistRenderer")?.let { playlistOf("gridPlaylistRenderer", it) }?.let { return SearchHit.Playlist(it) }
+        content.optJSONObject("gridShowRenderer")?.let { playlistOf("gridShowRenderer", it) }?.let { return SearchHit.Playlist(it) }
+        content.optJSONObject("showRenderer")?.let { playlistOf("showRenderer", it) }?.let { return SearchHit.Playlist(it) }
+        content.optJSONObject("channelRenderer")?.toSearchChannel()?.let { return it }
+        content.optJSONObject("gridChannelRenderer")?.toSearchChannel()?.let { return it }
+        content.optJSONObject("shortsLockupViewModel")?.toSearchShort()?.let { return it }
+        content.optJSONObject("reelItemRenderer")?.toSearchShort()?.let { return it }
+        return null
+    }
+
+    private fun JSONObject.toSearchVideo(): SearchHit.Video? {
+        if (isMembersOnly(this)) return null
+        return parseVideoRenderer(this)?.let { SearchHit.Video(it, short = false) }
+    }
+
+    private fun JSONObject.toSearchLockup(): SearchHit.Video? {
+        if (isMembersOnly(this)) return null
+        return parseLockup(this)?.let { SearchHit.Video(it, short = false) }
+    }
+
+    private fun JSONObject.toSearchShort(): SearchHit.Video? =
+        parseShortLockup(this)?.let { SearchHit.Video(it, short = true) }
+
+    /**
+     * Flow's channel card. The two count fields are not reliably what their names say — a live
+     * channel puts the @handle under subscriberCountText — so each label is classified by its text.
+     */
+    private fun JSONObject.toSearchChannel(): SearchHit.Channel? {
+        val id = optString("channelId").takeIf { it.startsWith("UC") } ?: return null
+        val name = text("title")?.takeIf { it.isNotBlank() } ?: return null
+        val labels = listOfNotNull(text("subscriberCountText"), text("videoCountText"))
+        val handle = labels.firstOrNull { it.startsWith("@") }
+        val subscribers = labels.firstOrNull { !it.startsWith("@") && !it.contains("video", ignoreCase = true) }
+        val videoCount = labels.firstOrNull { it.contains("video", ignoreCase = true) }
+        val meta = listOfNotNull(handle, subscribers, videoCount).joinToString(" · ").ifBlank { null }
+        return SearchHit.Channel(
+            ChannelRef(id, name, thumbnails()?.lastOrNull()?.let(::absoluteUrl)),
+            meta,
+        )
+    }
+
+    private fun jsonInt(value: Any?): Int? = when (value) {
+        is Number -> value.toInt()
+        is String -> value.toIntOrNull()
+        else -> null
+    }
+
     /** A playlist's videos; anonymous when signed out, so a channel's public playlists open too. */
     suspend fun playlist(id: String, next: String? = null): FeedPage = withContext(Dispatchers.IO) {
         val body = if (next != null) JSONObject().put("continuation", next) else JSONObject().put("browseId", "VL$id")
-        parseFeed(postAny("browse", body))
+        val root = postAny("browse", body)
+        val page = parseFeed(root)
+        if (next != null) page else page.copy(playlistHeader = parsePlaylistHeader(root))
     }
+
+    /**
+     * Flow's `toVideoPlaylistPage` header: the owner from `pageHeaderViewModel`'s avatar stack
+     * (or the older `playlistHeaderRenderer`), and the description from
+     * `descriptionPreviewViewModel`, or the sidebar when that is what arrived.
+     */
+    internal fun parsePlaylistHeader(root: JSONObject): PlaylistHeaderInfo {
+        val pageHeader = root.findObject("pageHeaderViewModel")
+        val legacy = root.findObject("playlistHeaderRenderer")
+        val sidebar = root.findObject("playlistSidebarPrimaryInfoRenderer")
+        val owner = pageHeader?.playlistHeaderOwner() ?: legacy?.playlistLegacyOwner()
+        val description = pageHeader
+            ?.optJSONObject("description")
+            ?.optJSONObject("descriptionPreviewViewModel")
+            ?.text("description")
+            ?: sidebar?.text("description")
+        return PlaylistHeaderInfo(owner, description?.trim().orEmpty())
+    }
+
+    /** "by Name" in the header's avatar stack. From Flow's `headerOwner`. */
+    private fun JSONObject.playlistHeaderOwner(): String? {
+        val metadata = optJSONObject("metadata") ?: return null
+        var name: String? = null
+        metadata.walk { key, obj ->
+            if (name != null || key != "avatarStackViewModel") return@walk
+            name = obj.text("text")?.removePrefix("by ")?.trim()?.ifBlank { null }
+        }
+        return name
+    }
+
+    /** The older header's `ownerText`. From Flow's `legacyOwner`. */
+    private fun JSONObject.playlistLegacyOwner(): String? =
+        text("ownerText")?.trim()?.ifBlank { null }
 
     suspend fun channelAvatarUrl(channelId: String): String? = withContext(Dispatchers.IO) {
         val root = postAny("browse", JSONObject().put("browseId", channelId))
@@ -505,7 +890,8 @@ object InnerTube {
         "gridPlaylistRenderer", "playlistRenderer" -> obj.optString("playlistId").ifBlank { null }?.let { id ->
             PlaylistRef(id, obj.text("title") ?: "", obj.thumbnails()?.lastOrNull()?.let(::absoluteUrl), obj.text("videoCountText") ?: obj.text("videoCountShortText"))
         }
-        "lockupViewModel" -> if (obj.optString("contentType") != "LOCKUP_CONTENT_TYPE_PLAYLIST") null
+        "gridShowRenderer", "showRenderer" -> showPlaylist(obj)
+        "lockupViewModel" -> if (obj.optString("contentType") !in PLAYLIST_LOCKUPS) null
         else obj.optString("contentId").ifBlank { null }?.let { id ->
             val meta = obj.optJSONObject("metadata")?.optJSONObject("lockupMetadataViewModel")
             PlaylistRef(
@@ -516,6 +902,37 @@ object InnerTube {
             )
         }
         else -> null
+    }
+
+    /** Lockups Flow files as playlist rows: a playlist, a podcast, an album, or a course. */
+    private val PLAYLIST_LOCKUPS = setOf(
+        "LOCKUP_CONTENT_TYPE_PLAYLIST",
+        "LOCKUP_CONTENT_TYPE_PODCAST",
+        "LOCKUP_CONTENT_TYPE_ALBUM",
+        "LOCKUP_CONTENT_TYPE_COURSE",
+    )
+
+    /**
+     * A show is a playlist under another name, as Flow's `toShowItem`: the browse id is the
+     * playlist id behind a "VL" prefix, and the picture sits under `showCustomThumbnailRenderer`.
+     */
+    private fun showPlaylist(obj: JSONObject): PlaylistRef? {
+        val id = obj.optJSONObject("navigationEndpoint")?.optJSONObject("browseEndpoint")?.optString("browseId")
+            ?.removePrefix("VL")?.ifBlank { null } ?: return null
+        val title = obj.text("title") ?: return null
+        val thumb = obj.optJSONObject("thumbnailRenderer")
+            ?.optJSONObject("showCustomThumbnailRenderer")
+            ?.optJSONObject("thumbnail")
+            ?.thumbnails()?.lastOrNull()?.let(::absoluteUrl)
+        val overlays = obj.optJSONArray("thumbnailOverlays")
+        var count: String? = null
+        if (overlays != null) {
+            for (i in 0 until overlays.length()) {
+                count = overlays.optJSONObject(i)?.collectStrings("text")?.firstOrNull { it.any(Char::isDigit) }
+                if (count != null) break
+            }
+        }
+        return PlaylistRef(id, title, thumb, count)
     }
 
     /**
@@ -824,17 +1241,17 @@ object InnerTube {
      * Pulls every video out of a browse response, whichever renderer YouTube used:
      * the classic videoRenderer family or the newer lockupViewModel. Shorts are skipped.
      */
-    internal fun parseFeed(root: JSONObject): FeedPage {
+    internal fun parseFeed(root: JSONObject, includeLive: Boolean = false): FeedPage {
         val videos = LinkedHashMap<String, VideoItem>()
         var next: String? = null
         root.walk { key, obj ->
             when (key) {
-                // Members-only videos can't be played (anonymous extraction), live and upcoming
-                // streams neither (no live playback, as in search), and full movies/TV aren't
-                // wanted (Derek), so none of them is ever shown.
+                // Members-only videos can't be played (anonymous extraction) and full movies/TV
+                // aren't wanted (Derek). Live streams stay out of every feed except a channel's
+                // Live tab, which is the list of them.
                 "videoRenderer", "gridVideoRenderer", "compactVideoRenderer", "playlistVideoRenderer" ->
-                    if (!isMembersOnly(obj) && !isLive(obj) && !isMovie(obj)) parseVideoRenderer(obj)?.let { videos.putIfAbsent(it.id, it) }
-                "lockupViewModel" -> if (obj.optString("contentType") == "LOCKUP_CONTENT_TYPE_VIDEO" && !isMembersOnly(obj) && !isLive(obj) && !isMovie(obj)) {
+                    if (!isMembersOnly(obj) && (includeLive || !isLive(obj)) && !isMovie(obj)) parseVideoRenderer(obj)?.let { videos.putIfAbsent(it.id, it) }
+                "lockupViewModel" -> if (obj.optString("contentType") == "LOCKUP_CONTENT_TYPE_VIDEO" && !isMembersOnly(obj) && (includeLive || !isLive(obj)) && !isMovie(obj)) {
                     parseLockup(obj)?.let { videos.putIfAbsent(it.id, it) }
                 }
                 // Only the feed's own "load more" item (old and new names); chip filters
@@ -904,6 +1321,104 @@ object InnerTube {
     }
 
     /**
+     * A channel tab's filters, as Flow's `channelFilterGroups`. A chip whose tap opens a sheet
+     * (`showSheetCommand` → `listItemViewModel`) is one dropdown — Latest, Popular, Oldest — even
+     * when Members only and Public sit beside it. A parser that only reads the chip's own
+     * continuation sees no options and drops the menu. Plain chips stay a second group. The
+     * playlists sort menu (`sortFilterSubMenuRenderer`) is another dropdown, carried as browse params.
+     */
+    internal fun parseChannelFilters(root: JSONObject): List<ChannelFilterGroup> {
+        val groups = mutableListOf<ChannelFilterGroup>()
+        val chips = mutableListOf<ChannelFilterOption>()
+        val bar = root.findObject("chipBarViewModel")
+        val arr = bar?.optJSONArray("chips")
+        if (arr != null) {
+            for (i in 0 until arr.length()) {
+                val chip = arr.optJSONObject(i)?.optJSONObject("chipViewModel") ?: continue
+                val dropdown = chip.dropdownOptions()
+                if (dropdown.isNotEmpty()) {
+                    groups += ChannelFilterGroup(dropdown = true, options = dropdown)
+                    continue
+                }
+                chip.asFilterChip()?.let(chips::add)
+            }
+        }
+        if (chips.isNotEmpty()) groups += ChannelFilterGroup(dropdown = false, options = chips)
+        root.findObject("sortFilterSubMenuRenderer")?.let { menu ->
+            val items = menu.optJSONArray("subMenuItems") ?: return@let
+            val options = buildList {
+                for (i in 0 until items.length()) {
+                    val value = items.optJSONObject(i) ?: continue
+                    val label = value.text("title")?.trim()?.takeIf { it.isNotBlank() } ?: continue
+                    val selected = value.flag("selected")
+                    val params = value.optJSONObject("navigationEndpoint")?.browseParams()
+                    add(ChannelFilterOption(label, if (selected) null else params?.let { BROWSE_PARAMS + it }, selected))
+                }
+            }
+            if (options.isNotEmpty()) groups += ChannelFilterGroup(dropdown = true, options = options)
+        }
+        if (groups.none { it.dropdown }) {
+            val plain = groups.firstOrNull { !it.dropdown } ?: return groups
+            val sorts = plain.options.filter { it.label.lowercase() in SORT_NAMES }
+            if (sorts.size >= 2) {
+                val rest = plain.options.filter { it.label.lowercase() !in SORT_NAMES }
+                groups.clear()
+                groups += ChannelFilterGroup(dropdown = true, options = sorts)
+                if (rest.isNotEmpty()) groups += ChannelFilterGroup(dropdown = false, options = rest)
+            }
+        }
+        return groups
+    }
+
+    /** Latest / Popular / Oldest, the titles YouTube sends while the client asks in English. */
+    private val SORT_NAMES = setOf("latest", "popular", "oldest")
+
+    /** A sheet chip's rows. Empty when the chip is not a dropdown. */
+    private fun JSONObject.dropdownOptions(): List<ChannelFilterOption> {
+        val list = optJSONObject("tapCommand")
+            ?.optJSONObject("innertubeCommand")
+            ?.optJSONObject("showSheetCommand")
+            ?.optJSONObject("panelLoadingStrategy")
+            ?.optJSONObject("inlineContent")
+            ?.optJSONObject("sheetViewModel")
+            ?.optJSONObject("content")
+            ?.optJSONObject("listViewModel")
+            ?.optJSONArray("listItems") ?: return emptyList()
+        return buildList {
+            for (i in 0 until list.length()) {
+                val item = list.optJSONObject(i)?.optJSONObject("listItemViewModel") ?: continue
+                val label = item.text("title")?.trim()?.takeIf { it.isNotBlank() } ?: continue
+                val selected = item.flag("isSelected")
+                val token = item.optJSONObject("rendererContext")?.firstContinuationToken()
+                add(ChannelFilterOption(label, if (selected) null else token, selected))
+            }
+        }
+    }
+
+    /** An ordinary filter chip. A dropdown chip with no inline sheet is left out, not shown as one option. */
+    private fun JSONObject.asFilterChip(): ChannelFilterOption? {
+        if (optString("displayType").endsWith("DROP_DOWN")) return null
+        val label = text("text")?.trim()?.takeIf { it.isNotBlank() } ?: return null
+        if (SKIPPED_CHIPS.any { it.equals(label, ignoreCase = true) }) return null
+        val token = optJSONObject("tapCommand")?.firstContinuationToken() ?: return null
+        val selected = flag("selected")
+        return ChannelFilterOption(label, if (selected) null else token, selected)
+    }
+
+    private fun JSONObject.flag(key: String): Boolean = when (val v = opt(key)) {
+        is Boolean -> v
+        is String -> v == "true"
+        else -> false
+    }
+
+    private fun JSONObject.browseParams(): String? {
+        optJSONObject("browseEndpoint")?.optString("params")?.ifBlank { null }?.let { return it }
+        var params: String? = null
+        walk { key, obj -> if (params == null && key == "browseEndpoint") params = obj.optString("params").ifBlank { null } }
+        return params
+    }
+
+    /**
      * Home chips Skipii can't fill: "Your custom feed" is a prompt box with no videos (Derek,
      * 6632.png), and "Live" is all live streams, which aren't played (6633.png).
      */
@@ -921,11 +1436,13 @@ object InnerTube {
         var homeContent: JSONObject? = null
         val list = root.optJSONObject("contents")?.optJSONObject("twoColumnBrowseResultsRenderer")?.optJSONArray("tabs")
         for (i in 0 until (list?.length() ?: 0)) {
-            val tab = list?.optJSONObject(i)?.optJSONObject("tabRenderer") ?: continue
-            val kind = ChannelTab.entries.firstOrNull { it.title.equals(tab.optString("title"), ignoreCase = true) } ?: continue
+            val node = list?.optJSONObject(i) ?: continue
+            val tab = node.optJSONObject("tabRenderer") ?: node.optJSONObject("expandableTabRenderer") ?: continue
+            // Flow reads the tab from its URL, not its title, so a translated "Shows" still lands.
+            val kind = tab.toChannelTab(isFirst = i == 0) ?: continue
             val params = tab.optJSONObject("endpoint")?.optJSONObject("browseEndpoint")?.optString("params")?.ifBlank { null } ?: continue
             tabs.putIfAbsent(kind, params)
-            if (kind == ChannelTab.Home) homeContent = tab.optJSONObject("content")
+            if (kind == ChannelTab.Home && homeContent == null) homeContent = tab.optJSONObject("content")
         }
         var featured: VideoItem? = null
         val shelves = mutableListOf<ChannelShelf>()
@@ -935,7 +1452,13 @@ object InnerTube {
                 "shelfRenderer", "reelShelfRenderer" -> parseShelf(obj, key == "reelShelfRenderer", channelId, tabs.keys)?.let(shelves::add)
             }
         }
-        return ChannelHome(tabs, featured, shelves)
+        return ChannelHome(tabs, featured, shelves, handle = channelHandle(root))
+    }
+
+    /** `@name` from `channelMetadataRenderer.vanityChannelUrl` (`http://www.youtube.com/@name`). */
+    internal fun channelHandle(root: JSONObject): String? {
+        val vanity = root.findObject("channelMetadataRenderer")?.optString("vanityChannelUrl").orEmpty()
+        return vanity.substringAfterLast('/').substringBefore('?').takeIf { it.startsWith("@") && it.length > 1 }
     }
 
     private fun parseFeatured(o: JSONObject): VideoItem? {
@@ -948,6 +1471,7 @@ object InnerTube {
             avatar = null, durationSec = 0,
             views = parseViews(o.text("viewCountText")),
             uploaded = o.text("publishedTimeText"),
+            live = isOnAir(o),
         )
     }
 
@@ -996,8 +1520,47 @@ object InnerTube {
         return when (String(bytes, 2, bytes[1].toInt())) {
             "videos" -> ChannelTab.Videos
             "shorts" -> ChannelTab.Shorts
+            "streams", "live" -> ChannelTab.Live
+            "shows" -> ChannelTab.Shows
+            "podcasts" -> ChannelTab.Podcasts
             "playlists" -> ChannelTab.Playlists
+            "posts", "community" -> ChannelTab.Posts
             "featured" -> ChannelTab.Home
+            else -> null
+        }
+    }
+
+    /**
+     * Flow's `toChannelTabKind`: the last segment of the tab URL. The channel root is Home.
+     * A title is only the fallback, and only the landing tab with no URL is Home.
+     */
+    private fun JSONObject.toChannelTab(isFirst: Boolean): ChannelTab? {
+        val endpoint = optJSONObject("endpoint")
+        // The tab path lives on the web command (`/@name/videos`). canonicalBaseUrl is the channel root on every tab.
+        val url = endpoint?.optJSONObject("commandMetadata")?.optJSONObject("webCommandMetadata")?.optString("url")?.ifBlank { null }
+            ?: endpoint?.optJSONObject("browseEndpoint")?.optString("canonicalBaseUrl")?.ifBlank { null }
+        url.toChannelTab()?.let { return it }
+        val title = optString("title").trim()
+        val fromTitle = when (title.lowercase()) {
+            "posts", "community" -> ChannelTab.Posts
+            "live", "streams" -> ChannelTab.Live
+            else -> ChannelTab.entries.firstOrNull { it != ChannelTab.About && it.title.equals(title, ignoreCase = true) }
+        }
+        return fromTitle ?: if (isFirst) ChannelTab.Home else null
+    }
+
+    internal fun String?.toChannelTab(): ChannelTab? {
+        val segment = this?.substringBefore('?')?.trimEnd('/')?.substringAfterLast('/')?.lowercase() ?: return null
+        if (segment.startsWith("@") || segment.startsWith("uc")) return ChannelTab.Home
+        return when (segment) {
+            "featured", "home" -> ChannelTab.Home
+            "videos" -> ChannelTab.Videos
+            "shorts" -> ChannelTab.Shorts
+            "streams", "live" -> ChannelTab.Live
+            "shows" -> ChannelTab.Shows
+            "podcasts" -> ChannelTab.Podcasts
+            "playlists" -> ChannelTab.Playlists
+            "community", "posts" -> ChannelTab.Posts
             else -> null
         }
     }
@@ -1034,6 +1597,21 @@ object InnerTube {
      * channel is live now and its other videos play fine. Older renderers: BADGE_STYLE_TYPE_LIVE_NOW,
      * the time overlay styled LIVE / UPCOMING, or `upcomingEventData` (the markers NewPipe reads).
      */
+    /** On air right now, as opposed to a premiere that has not started. The thumbnail badge reads this. */
+    internal fun isOnAir(o: JSONObject): Boolean {
+        if (o.collectStrings("style").any { it == "BADGE_STYLE_TYPE_LIVE_NOW" || it == "LIVE" }) return true
+        if (o.text("lengthText")?.equals("LIVE", ignoreCase = true) == true) return true
+        val overlays = o.optJSONArray("thumbnailOverlays")
+        if (overlays != null) {
+            for (i in 0 until overlays.length()) {
+                val status = overlays.optJSONObject(i)?.optJSONObject("thumbnailOverlayTimeStatusRenderer") ?: continue
+                if (status.optString("style") == "LIVE" || status.text("text")?.equals("LIVE", ignoreCase = true) == true) return true
+            }
+        }
+        val image = o.optJSONObject("contentImage") ?: return false
+        return image.collectStrings("badgeStyle").any { it == "THUMBNAIL_OVERLAY_BADGE_STYLE_LIVE" }
+    }
+
     internal fun isLive(o: JSONObject): Boolean {
         if (o.has("upcomingEventData")) return true
         if (o.collectStrings("style").any { it == "BADGE_STYLE_TYPE_LIVE_NOW" || it == "LIVE" || it == "UPCOMING" }) return true
@@ -1097,6 +1675,7 @@ object InnerTube {
             views = parseViews(o.text("viewCountText") ?: o.text("shortViewCountText") ?: infoRuns.firstOrNull { it.contains("view") }),
             uploaded = o.text("publishedTimeText") ?: infoRuns.firstOrNull { it.contains("ago") },
             feedback = feedbackOf(o),
+            live = isOnAir(o),
         )
     }
 
@@ -1125,6 +1704,7 @@ object InnerTube {
             views = parseViews(parts.firstOrNull { it.contains("view") }),
             uploaded = parts.firstOrNull { it.contains("ago") },
             feedback = feedbackOf(o),
+            live = isOnAir(o),
         )
     }
 
@@ -1197,6 +1777,71 @@ object InnerTube {
     }
 
     private fun absoluteUrl(url: String) = if (url.startsWith("//")) "https:$url" else url
+
+    /**
+     * The landing page has a one-line description and no links. The token for the About panel is on
+     * the "and N more links" suffix, or, when the channel has only one link, on the description's
+     * "…more". Flow reads the same two places (`channelAboutContinuation`).
+     */
+    internal fun JSONObject.channelAboutContinuation(): String? {
+        var suffix: String? = null
+        var description: String? = null
+        walk { key, obj ->
+            if (suffix == null && key == "attributionViewModel") suffix = obj.optJSONObject("suffix")?.firstContinuationToken()
+            if (description == null && key == "pageHeaderViewModel") description = obj.optJSONObject("description")?.firstContinuationToken()
+        }
+        return suffix ?: description
+    }
+
+    /** `aboutChannelViewModel` from the About continuation: description, counts, and external links. */
+    internal fun parseChannelAbout(root: JSONObject): ChannelAboutInfo? {
+        val model = root.findObject("aboutChannelViewModel") ?: return null
+        return ChannelAboutInfo(
+            description = model.text("description")?.trim()?.ifBlank { null },
+            country = model.text("country"),
+            joined = model.text("joinedDateText"),
+            views = model.text("viewCountText"),
+            videos = model.text("videoCountText"),
+            subscribers = model.text("subscriberCountText"),
+            canonical = model.optString("canonicalChannelUrl").ifBlank { null },
+            links = model.aboutLinks(),
+        )
+    }
+
+    private fun JSONObject.aboutLinks(): List<ChannelLink> {
+        val arr = optJSONArray("links") ?: return emptyList()
+        return buildList {
+            for (i in 0 until arr.length()) {
+                val link = arr.optJSONObject(i)?.optJSONObject("channelExternalLinkViewModel") ?: continue
+                val title = link.text("title")?.takeIf { it.isNotBlank() } ?: continue
+                val display = link.text("link")?.takeIf { it.isNotBlank() }
+                val target = link.linkTarget() ?: display ?: continue
+                val icon = link.optJSONObject("favicon")?.collectStrings("url")?.lastOrNull()?.let(::absoluteUrl)
+                add(ChannelLink(title, display ?: title, target, icon))
+            }
+        }
+    }
+
+    /** The `urlEndpoint` under a link, with YouTube's redirect wrapper taken off. */
+    private fun JSONObject.linkTarget(): String? {
+        var url: String? = null
+        walk { _, obj ->
+            if (url == null) url = obj.optJSONObject("urlEndpoint")?.optString("url")?.ifBlank { null }?.let(::unwrapYouTubeRedirect)
+        }
+        return url
+    }
+
+    private fun unwrapYouTubeRedirect(url: String): String {
+        val q = Regex("[?&]q=([^&]+)").find(url)?.groupValues?.getOrNull(1) ?: return url
+        return runCatching { java.net.URLDecoder.decode(q, "UTF-8") }.getOrDefault(url)
+    }
+
+    private fun JSONObject.firstContinuationToken(): String? {
+        optJSONObject("continuationCommand")?.optString("token")?.ifBlank { null }?.let { return it }
+        var token: String? = null
+        walk { key, obj -> if (token == null && key == "continuationCommand") token = obj.optString("token").ifBlank { null } }
+        return token
+    }
 }
 
 // ── JSON helpers ───────────────────────────────────────────────────────────────

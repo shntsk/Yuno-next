@@ -48,6 +48,7 @@ class PlayerSheetMotion(
     private val dock: PlayerDock,
     private val shown: () -> Boolean,
     private val setShown: (Boolean) -> Unit,
+    private val endLaunch: () -> Unit = {},
 ) : MiniPlayerPull {
     var held by mutableFloatStateOf(Float.NaN)
         private set
@@ -70,7 +71,8 @@ class PlayerSheetMotion(
     var windowInfo: WindowInfo? = null
     var flingVelocity = 0f
     private var settle: Job? = null
-    private var closing = false
+    var isClosing by mutableStateOf(false)
+        private set
 
     private fun travel(): Float =
         dock.sheetTravel.takeIf { it > 0f } ?: (windowInfo?.containerSize?.height ?: 0).toFloat()
@@ -128,6 +130,9 @@ class PlayerSheetMotion(
         }
         dock.sheetTravel = height
         laidOut = true
+        // A tap is already sitting on its thumbnail. Waiting an extra frame for
+        // [markPlaced] left the picture hidden while the open had already moved.
+        if (dock.launchFrom != null) placed = true
     }
 
     fun markPlaced() {
@@ -151,30 +156,44 @@ class PlayerSheetMotion(
         if ((System.nanoTime() - sheetSampleNanos) / 1e6f < SHEET_VELOCITY_FRESH_MS) sheetVelocity else 0f
 
     fun open() {
-        if (shown()) {
-            if (closing && holding) {
-                settle?.cancel()
-                reopening()
-                val from = held
-                settle = scope.launch {
-                    slide(from = from, to = 0f)
-                    held = Float.NaN
-                }
+        val fromCard = dock.launchFrom != null
+        // Settled full player. A new video just switches; the sheet stays where it is.
+        if (shown() && !isClosing && !holding && !fromCard) return
+        // Finger is already dragging the sheet closed, and this isn't a new thumbnail.
+        if (shown() && isClosing && holding && !fromCard) {
+            settle?.cancel()
+            reopening()
+            val from = held
+            settle = scope.launch {
+                slide(from = from, to = 0f)
+                arrived()
             }
             return
         }
         settle?.cancel()
-        closing = false
+        val wasUp = shown()
+        isClosing = false
+        if (wasUp) reopening()
         val travel = travel()
-        held = travel
-        dock.sheetUp = true
-        dock.fadeArmed = false
-        SharedVideoTexture.captureFrame()
-        setShown(true)
-        settle = scope.launch {
-            withTimeoutOrNull(LAYOUT_WAIT_MS) { snapshotFlow { laidOut }.first { it } }
-            slide(from = if (holding) held else travel(), to = 0f)
-            held = Float.NaN
+        // A thumbnail open always starts on that picture, even if a close was underway.
+        if (!wasUp || fromCard) {
+            held = travel
+            dock.sheetUp = true
+            dock.fadeArmed = false
+            SharedVideoTexture.captureFrame()
+            setShown(true)
+            settle = scope.launch {
+                withTimeoutOrNull(LAYOUT_WAIT_MS) { snapshotFlow { laidOut }.first { it } }
+                slide(from = travel(), to = 0f)
+                arrived()
+            }
+        } else {
+            val from = position().takeUnless { it.isNaN() } ?: 0f
+            held = from
+            settle = scope.launch {
+                slide(from = from, to = 0f)
+                arrived()
+            }
         }
     }
 
@@ -201,14 +220,14 @@ class PlayerSheetMotion(
     }
 
     private fun reopening() {
-        closing = false
+        isClosing = false
         passTouchesThrough(false)
         window?.setWindowAnimations(windowAnimations)
     }
 
     fun close() {
-        if (!shown() || closing) return
-        closing = true
+        if (!shown() || isClosing) return
+        isClosing = true
         quietWindow()
         passTouchesThrough(true)
         SharedVideoTexture.captureFrame()
@@ -231,7 +250,7 @@ class PlayerSheetMotion(
                 // Pull up from the mini player. A downward drag has nothing to open.
                 if (delta >= 0f) return
                 settle?.cancel()
-                closing = false
+                isClosing = false
                 held = travel()
                 pullStartAt = held
                 pullStartNanos = System.nanoTime()
@@ -243,7 +262,7 @@ class PlayerSheetMotion(
                 // Already open: follow the finger down. Upward is the fullscreen pull.
                 if (delta <= 0f) return
                 settle?.cancel()
-                closing = false
+                isClosing = false
                 val from = position().takeUnless { it.isNaN() } ?: 0f
                 held = from
                 pullStartAt = from
@@ -264,26 +283,27 @@ class PlayerSheetMotion(
         val flick = abs(speed) >= flingVelocity
         val open = if (flick) speed < 0f else held < travel / 2f
         if (!open) {
-            closing = true
+            isClosing = true
             quietWindow()
             passTouchesThrough(true)
-        } else if (closing) {
+        } else if (isClosing) {
             reopening()
         }
         val from = held
         settle = scope.launch {
             slide(from = from, to = if (open) 0f else travel, velocity = speed)
-            if (open) held = Float.NaN else dismissQuietly()
+            if (open) arrived() else dismissQuietly()
         }
     }
 
     fun onSheetGone() {
-        closing = false
+        isClosing = false
         sheetSampleAt = Float.NaN
         sheetVelocity = 0f
         settle?.cancel()
         windowRestore?.cancel()
         held = Float.NaN
+        endLaunch()
         dock.sheetUp = false
         dock.resetPose()
         laidOut = false
@@ -311,6 +331,13 @@ class PlayerSheetMotion(
         quietWindow()
         SharedVideoTexture.captureFrame()
         dock.sheetUp = false
+        endLaunch()
         setShown(false)
+    }
+
+    /** The sheet is fully open. A page launch can hand off to the mini player. */
+    private fun arrived() {
+        held = Float.NaN
+        endLaunch()
     }
 }

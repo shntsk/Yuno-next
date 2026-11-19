@@ -6,9 +6,6 @@
     <string name="video_bot_check_waiting">YouTube इस कनेक्शन की जांच कर रहा है. फिर से कोशिश की जा रही है…</string>
 
     <!-- Accessibility labels of the round buttons on the video. -->
-    <string name="video_audio_only">सिर्फ़ ऑडियो</string>
-    <!-- Accessibility label of the filled audio-only button shown while audio only is on (tap turns it off). -->
-    <string name="video_audio_only_on">सिर्फ़ ऑडियो चालू है</string>
     <string name="video_playback_speed">प्लेबैक स्पीड</string>
     <string name="video_captions">कैप्शन</string>
     <string name="video_quality">क्वालिटी</string>

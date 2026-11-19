@@ -159,3 +159,20 @@ fun Modifier.liquidGlass(
         backdropScale = GLASS_RESOLUTION_SCALE,
     )
 }
+
+/**
+ * Just the rim of liquid glass — the directional highlight along a glass edge —
+ * for a control that keeps its own fill. Brought from BitChord's [liquidGlassRim].
+ * Nothing at all while Liquid Glass is off or unsupported.
+ */
+@Composable
+fun Modifier.liquidGlassRim(shape: CornerBasedShape): Modifier {
+    if (!LocalLiquidGlassEnabled.current || !isGlassSupported()) return this
+    val shapeProvider = remember(shape) { ShapeProvider { shape } }
+    return then(
+        HighlightElement(
+            shapeProvider = shapeProvider,
+            highlight = { Highlight.Default },
+        ),
+    )
+}

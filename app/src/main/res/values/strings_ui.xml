@@ -110,6 +110,18 @@
     <string name="ui_playlists">Playlists</string>
     <string name="ui_playlist_empty_title">Nothing here yet</string>
     <string name="ui_playlist_empty_body">Videos you add to this playlist will show up here.</string>
+    <string name="ui_play">Play</string>
+    <string name="ui_shuffle">Shuffle</string>
+    <plurals name="ui_playlist_videos">
+        <item quantity="one">%d video</item>
+        <item quantity="other">%d videos</item>
+    </plurals>
+    <!-- Flow's mediaLengthLabel: a playlist's running time, once every page is in. -->
+    <string name="ui_duration_hours_minutes">%1$d hr %2$d min</string>
+    <plurals name="ui_duration_minutes">
+        <item quantity="one">%1$d min</item>
+        <item quantity="other">%1$d min</item>
+    </plurals>
 
     <!-- ── Search ─────────────────────────────────────────────────────────── -->
     <!-- Page title (large header). -->
@@ -129,6 +141,48 @@
     <string name="ui_clear_all">Clear all</string>
     <!-- Accessibility label of the X on a past search. -->
     <string name="ui_remove_search">Remove</string>
+    <string name="ui_search_show_all">Show all</string>
+    <string name="ui_search_shelf_more">Show more</string>
+    <string name="ui_search_shelf_less">Show less</string>
+    <string name="ui_search_fill">Put this in the search field</string>
+    <string name="ui_search_filters">Filters</string>
+    <string name="ui_search_apply">Apply</string>
+    <string name="ui_search_clear_title">Clear search history?</string>
+    <string name="ui_search_clear_body">Recent searches on this device will be removed.</string>
+    <string name="ui_search_clear">Clear</string>
+    <string name="ui_search_all">All</string>
+    <string name="ui_search_channels">Channels</string>
+    <string name="ui_search_movies">Movies</string>
+    <string name="ui_search_live">Live</string>
+    <string name="ui_search_recent">Recently uploaded</string>
+    <string name="ui_search_unwatched">Unwatched</string>
+    <string name="ui_search_watched">Watched</string>
+    <string name="ui_search_type">Type</string>
+    <string name="ui_search_duration">Duration</string>
+    <string name="ui_search_upload_date">Upload date</string>
+    <string name="ui_search_sort">Sort by</string>
+    <string name="ui_search_features">Features</string>
+    <string name="ui_search_any">Any</string>
+    <string name="ui_search_under_3">Under 3 minutes</string>
+    <string name="ui_search_3_to_20">3 – 20 minutes</string>
+    <string name="ui_search_over_20">Over 20 minutes</string>
+    <string name="ui_search_last_hour">Last hour</string>
+    <string name="ui_search_today">Today</string>
+    <string name="ui_search_this_week">This week</string>
+    <string name="ui_search_this_month">This month</string>
+    <string name="ui_search_this_year">This year</string>
+    <string name="ui_search_relevance">Relevance</string>
+    <string name="ui_search_view_count">View count</string>
+    <string name="ui_search_hd">HD</string>
+    <string name="ui_search_4k">4K</string>
+    <string name="ui_search_hdr">HDR</string>
+    <string name="ui_search_subtitles">Subtitles</string>
+    <string name="ui_search_creative_commons">Creative Commons</string>
+    <string name="ui_search_360">360°</string>
+    <string name="ui_search_vr180">VR180</string>
+    <string name="ui_search_3d">3D</string>
+    <string name="ui_search_location">Location</string>
+    <string name="ui_search_purchased">Purchased</string>
 
     <!-- ── Channel page and feeds ─────────────────────────────────────────── -->
     <string name="ui_subscription_error">Couldn\'t update your subscription.</string>
@@ -146,6 +200,7 @@
     <string name="ui_channel_featured_channels">Featured channels</string>
     <!-- A channel tab with nothing in it ("Shorts" is YouTube's name, keep it). -->
     <string name="ui_channel_no_videos">This channel hasn\'t posted any videos.</string>
+    <string name="ui_channel_no_live">This channel has no live videos.</string>
     <string name="ui_channel_no_shorts">This channel hasn\'t posted any Shorts.</string>
     <string name="ui_channel_no_playlists">This channel has no public playlists.</string>
     <string name="ui_feed_error_title">Couldn\'t load this</string>

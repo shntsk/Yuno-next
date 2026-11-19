@@ -100,10 +100,9 @@ class OrientationController(private val activity: ComponentActivity) {
     /** Whether the open player shows fullscreen; [landscape] is the window's (pane's) shape. */
     fun showsFullscreen(playerOpen: Boolean, landscape: Boolean): Boolean = when {
         !playerOpen -> false
-        // Audio only has no picture to fill the pane with.
-        multiWindow -> !AudioOnly.enabled && (paneFullscreen ?: landscape)
-        largeScreen -> !AudioOnly.enabled && paneFullscreen == true
-        else -> landscape || (portraitFullscreen && !AudioOnly.enabled)
+        multiWindow -> paneFullscreen ?: landscape
+        largeScreen -> paneFullscreen == true
+        else -> landscape || portraitFullscreen
     }
 
     /** [vertical]: the video is taller than wide, so fullscreen stays portrait (as on a square screen). */

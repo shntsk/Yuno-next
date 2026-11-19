@@ -9,6 +9,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -189,27 +190,208 @@ fun CommentSkeleton(avatar: Dp = 36.dp, start: Dp = 0.dp, lines: Int = 2) {
     }
 }
 
-/** Channel page before the banner and uploads arrive. */
+/** Which channel tab a placeholder is standing in for. */
+internal enum class ChannelBone { VideoRow, VideoCard, Shorts, PlaylistRow, PlaylistCard, Post }
+
+/**
+ * Channel page before the banner and the tabs arrive: the header, the tab row, the page gap,
+ * then the list rows.
+ */
 @Composable
 fun ChannelSkeletons() {
     SkeletonGroup {
         Column {
-            Column(Modifier.padding(horizontal = PageGutter)) {
-                Box(Modifier.fillMaxWidth().aspectRatio(5.6f).bone(RoundedCornerShape(FeedVideoThumbRadius.dp)))
-                Spacer(Modifier.height(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.size(76.dp).bone(CircleShape))
-                    Spacer(Modifier.width(14.dp))
-                    Column(Modifier.weight(1f)) {
-                        Box(Modifier.textBone(0.55f))
-                        Spacer(Modifier.height(8.dp))
-                        Box(Modifier.textBone(0.32f))
-                        Spacer(Modifier.height(6.dp))
-                        Box(Modifier.textBone(0.44f))
+            ChannelHeaderBone()
+            ChannelTabBone()
+            Spacer(Modifier.height(PageGutter))
+            repeat(3) { ChannelVideoCardBone() }
+        }
+    }
+}
+
+/** A tab's own placeholders. [page] is the first load; a further page is a single row. */
+@Composable
+internal fun ChannelTabSkeleton(kind: ChannelBone, page: Boolean) {
+    val count = when (kind) {
+        ChannelBone.VideoRow, ChannelBone.PlaylistRow -> if (page) 6 else 1
+        ChannelBone.VideoCard, ChannelBone.PlaylistCard -> if (page) 3 else 1
+        ChannelBone.Shorts, ChannelBone.Post -> if (page) 2 else 1
+    }
+    SkeletonGroup {
+        when (kind) {
+            ChannelBone.VideoRow -> Column { repeat(count) { ChannelVideoRowBone() } }
+            ChannelBone.VideoCard -> Column { repeat(count) { ChannelVideoCardBone() } }
+            ChannelBone.PlaylistRow -> Column { repeat(count) { ChannelPlaylistRowBone() } }
+            ChannelBone.PlaylistCard -> Column { repeat(count) { ChannelPlaylistCardBone() } }
+            ChannelBone.Shorts -> ChannelShortsBone(count)
+            ChannelBone.Post -> Column { repeat(count) { ChannelPostBone() } }
+        }
+    }
+}
+
+@Composable
+private fun ChannelHeaderBone() {
+    Column(Modifier.padding(horizontal = PageGutter)) {
+        Box(Modifier.fillMaxWidth().aspectRatio(5.6f / 1.55f).bone(RoundedCornerShape(14.dp)))
+        Spacer(Modifier.height(8.dp))
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(72.dp).bone(CircleShape))
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f).height(72.dp), verticalArrangement = Arrangement.SpaceEvenly) {
+                Box(Modifier.fillMaxWidth(0.62f).height(16.dp).bone(RoundedCornerShape(6.dp)))
+                Box(Modifier.fillMaxWidth(0.36f).height(12.dp).bone(RoundedCornerShape(6.dp)))
+                Box(Modifier.textBone(0.42f))
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        Box(Modifier.fillMaxWidth().height(52.dp).bone(CircleShape))
+    }
+}
+
+/** The tab row under the name: a few labels, then the hairline. */
+@Composable
+private fun ChannelTabBone() {
+    Row(
+        Modifier.fillMaxWidth().height(44.dp).padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(32.dp),
+    ) {
+        listOf(56.dp, 64.dp, 52.dp, 72.dp).forEach { width ->
+            Box(Modifier.width(width).height(12.dp).bone())
+        }
+    }
+    Box(Modifier.fillMaxWidth().height(0.5.dp).bone(RoundedCornerShape(0.dp)))
+}
+
+/** Videos and Live, list: the 168dp row, with the page gutter under it. */
+@Composable
+private fun ChannelVideoRowBone() {
+    Row(
+        Modifier.fillMaxWidth().padding(start = PageGutter, end = PageGutter, bottom = PageGutter),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.width(168.dp).aspectRatio(16f / 9f).bone(RoundedCornerShape(12.dp)))
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Box(Modifier.textBone(0.92f))
+            Spacer(Modifier.height(6.dp))
+            Box(Modifier.textBone(0.7f))
+            Spacer(Modifier.height(6.dp))
+            Box(Modifier.textBone(0.4f))
+        }
+    }
+}
+
+/** Videos and Live, grid: the home card, avatar included, title and one meta line. */
+@Composable
+private fun ChannelVideoCardBone() {
+    Column(Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+        Box(
+            Modifier
+                .padding(horizontal = PageGutter)
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .bone(RoundedCornerShape(FeedVideoThumbRadius.dp)),
+        )
+        Row(Modifier.padding(horizontal = PageGutter, vertical = 12.dp)) {
+            Box(Modifier.size(40.dp).bone(CircleShape))
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Box(Modifier.textBone(0.92f))
+                Spacer(Modifier.height(8.dp))
+                Box(Modifier.textBone(0.5f))
+            }
+        }
+    }
+}
+
+/** Playlists, Shows and Podcasts, list: the 142dp row. */
+@Composable
+private fun ChannelPlaylistRowBone() {
+    Row(
+        Modifier.fillMaxWidth().padding(start = PageGutter, end = PageGutter, bottom = PageGutter),
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.width(142.dp).aspectRatio(16f / 9f).bone(RoundedCornerShape(12.dp)))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Box(Modifier.textBone(0.8f))
+            Box(Modifier.textBone(0.36f))
+        }
+    }
+}
+
+/** Playlists, Shows and Podcasts, grid: the inset card, title and subtitle, no avatar. */
+@Composable
+private fun ChannelPlaylistCardBone() {
+    Column(Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+        Box(
+            Modifier
+                .padding(horizontal = PageGutter)
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .bone(RoundedCornerShape(FeedVideoThumbRadius.dp)),
+        )
+        Column(Modifier.padding(horizontal = PageGutter, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Box(Modifier.textBone(0.72f))
+            Box(Modifier.textBone(0.4f))
+        }
+    }
+}
+
+/** Shorts: the 160dp grid, title under the poster, the same gaps as the tab. */
+@Composable
+private fun ChannelShortsBone(rows: Int) {
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val cols = ((maxWidth - PageGutter * 2 + 12.dp) / (160.dp + 12.dp)).toInt().coerceAtLeast(1)
+        Column {
+            repeat(rows) {
+                Row(
+                    Modifier.fillMaxWidth().padding(start = PageGutter, end = PageGutter, bottom = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    repeat(cols) {
+                        Column(Modifier.weight(1f)) {
+                            Box(Modifier.fillMaxWidth().aspectRatio(9f / 16f).bone(RoundedCornerShape(16.dp)))
+                            Spacer(Modifier.height(8.dp))
+                            Box(Modifier.textBone(0.9f))
+                            Spacer(Modifier.height(4.dp))
+                            Box(Modifier.textBone(0.45f))
+                        }
                     }
                 }
             }
         }
+    }
+}
+
+/** A post: the 12dp gap above it, the side inset, a picture, then the hairline. */
+@Composable
+private fun ChannelPostBone() {
+    Column(Modifier.fillMaxWidth().padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(40.dp).bone(CircleShape))
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Box(Modifier.textBone(0.4f))
+                Box(Modifier.textBone(0.22f))
+            }
+        }
+        Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Box(Modifier.textBone(1f))
+            Box(Modifier.textBone(0.86f))
+            Box(Modifier.textBone(0.5f))
+        }
+        Box(Modifier.fillMaxWidth().height(160.dp).bone(RoundedCornerShape(0.dp)))
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Box(Modifier.size(20.dp).bone(CircleShape))
+            Box(Modifier.width(36.dp).height(12.dp).bone())
+        }
+        Box(Modifier.fillMaxWidth().height(0.5.dp).bone(RoundedCornerShape(0.dp)))
     }
 }
 

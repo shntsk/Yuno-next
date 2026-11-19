@@ -23,13 +23,13 @@ class YunoApplication : Application(), ImageLoaderFactory {
         // The iOS client only adds HLS livestream formats; Yuno plays VOD, so skip that request.
         org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeStreamExtractor.setFetchIosClient(false)
         ThemeSettings.init(this)
+        ChannelColorSetting.init(this)
         LiquidGlassSetting.init(this)
         // Settings › Appearance › Refresh rate: applies to each window as it comes up.
         RefreshRateSetting.init(this)
         Onboarding.init(this)
         QualityPreference.init(this)
         PlaybackSpeed.init(this)
-        AudioOnly.init(this)
         PlayerControls.init(this)
         FullscreenZoom.init(this)
         SeekStep.init(this)

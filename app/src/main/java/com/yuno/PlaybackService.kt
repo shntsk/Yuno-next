@@ -24,7 +24,10 @@ import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.MimeTypes
 import androidx.media3.exoplayer.dash.DashMediaSource
+import androidx.media3.exoplayer.dash.DefaultDashChunkSource
+import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.exoplayer.dash.manifest.AdaptationSet
 import androidx.media3.exoplayer.dash.manifest.DashManifest
 import androidx.media3.exoplayer.dash.manifest.DashManifestParser
@@ -113,13 +116,6 @@ class PlaybackService : MediaSessionService() {
         player.setVideoFrameMetadataListener { _, releaseTimeNs, _, _ -> AvSync.onFrameReleased(releaseTimeNs) }
         player.addListener(SponsorSkipper(player))
         player.addListener(SpeedKeeper(player))
-        // Audio only is app-wide and kept; the UI applies it on connect, this covers a start
-        // without one (e.g. resuming from the media notification).
-        if (AudioOnly.enabled) {
-            player.trackSelectionParameters = player.trackSelectionParameters.buildUpon()
-                .setTrackTypeDisabled(C.TRACK_TYPE_VIDEO, true)
-                .build()
-        }
         // Before the session's own listener: the UI must see the recovery when the error reaches it.
         player.addListener(StreamRecoverer(player, sources, resolver))
         resumeSaver = ResumeSaver(player).also(player::addListener)
@@ -222,19 +218,31 @@ private class StreamRecoverer(
     private val main = Handler(Looper.getMainLooper())
     private var lastId: String? = null
     private var lastPositionMs = 0L
+    private var lastAttemptMs = 0L
 
     override fun onPlayerError(error: PlaybackException) {
         if (error.errorCode != PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS) return
         val item = player.currentMediaItem ?: return
         val id = item.mediaId
         val position = player.currentPosition
-        if (id == lastId && position < lastPositionMs + PROGRESS_MS) {
+        val live = player.isCurrentMediaItemLive
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (live) {
+            // A live refusal reloads the manifest at the edge. Another one inside 15s is a real stop.
+            if (id == lastId && now - lastAttemptMs < LIVE_RETRY_MS) {
+                Log.w("Yuno", "live stream refused again for $id; giving up")
+                StreamRecovery.recovering = null
+                StreamRecovery.failed = id to java.io.IOException("YouTube refused the stream")
+                return
+            }
+        } else if (id == lastId && position < lastPositionMs + PROGRESS_MS) {
             Log.w("Yuno", "stream refused again for $id at ${position / 1000}s; giving up")
             return
         }
         lastId = id
         lastPositionMs = position
-        Log.i("Yuno", "stream refused for $id; re-extracting and resuming at ${position / 1000}s")
+        lastAttemptMs = now
+        Log.i("Yuno", "stream refused for $id; re-extracting" + if (live) " at the live edge" else " and resuming at ${position / 1000}s")
         StreamRecovery.failed = null
         StreamRecovery.recovering = id
         StreamCache.invalidate(id)
@@ -245,7 +253,7 @@ private class StreamRecoverer(
                 // The user moved on (another video, Try again) while the links loaded.
                 if (player.currentMediaItem?.mediaId != id || player.playerError == null) return@post
                 result
-                    .onSuccess { resume(item, position) }
+                    .onSuccess { resume(item, if (live) C.TIME_UNSET else position) }
                     .onFailure {
                         Log.w("Yuno", "re-extracting $id failed", it)
                         StreamRecovery.failed = id to it
@@ -268,6 +276,7 @@ private class StreamRecoverer(
 
     private companion object {
         const val PROGRESS_MS = 30_000L
+        const val LIVE_RETRY_MS = 15_000L
     }
 }
 
@@ -392,7 +401,7 @@ private class WatchTimeReporter(private val player: ExoPlayer) : Player.Listener
  *
  * The budget covers the back buffer too (the allocator counts both), so it is 60% of the
  * app's large heap (largeHeap is on): ~300 MB on a Pixel. At 1080p (~7 Mbps) that is 3 min
- * behind + ~2 min ahead; far more ahead at lower qualities, the whole video in audio only.
+ * behind + ~2 min ahead; far more ahead at lower qualities.
  * However full the budget, the player always loads [MIN_AHEAD_MS] ahead, so a full back
  * buffer can never starve playback.
  * Starting needs 1 s of media (2 s after a stall): at 1080p60 that halves what must download
@@ -467,7 +476,7 @@ private class SpeedKeeper(private val player: ExoPlayer) : Player.Listener {
 
 /**
  * Schedules SponsorBlock auto-skips for each video as it becomes current. Runs in the
- * service, so skips happen in background and audio-only playback too.
+ * service, so skips happen while the app is in the background too.
  *
  * Each auto-skip segment gets a PlayerMessage at its start (delivered once, so seeking
  * back into a segment plays it — the user's choice wins). On delivery the audio fades out
@@ -547,6 +556,11 @@ internal class YouTubeMediaSourceFactory(context: Context) : MediaSource.Factory
 
     override fun createMediaSource(mediaItem: MediaItem): MediaSource {
         val info = StreamCache.get(mediaItem.mediaId) ?: return fallback.createMediaSource(mediaItem)
+        when (val live = info.liveSource()) {
+            is LiveSource.Dash -> return liveDash(live.url, mediaItem)
+            is LiveSource.Hls -> return liveHls(live.url, mediaItem)
+            null -> Unit
+        }
         val picked = StreamSelection.pick(info)
         // Auto: every quality as one adaptive set. A chosen quality stays pinned below.
         if (QualityPreference.height == null && picked.audio != null) {
@@ -601,6 +615,18 @@ internal class YouTubeMediaSourceFactory(context: Context) : MediaSource.Factory
         )
         return DashMediaSource.Factory(dataSourceFactory).createMediaSource(manifest, mediaItem)
     }
+
+    /** MeeTube's live route: the DASH manifest URL, refreshed by their live parser. */
+    private fun liveDash(url: String, mediaItem: MediaItem): MediaSource =
+        DashMediaSource.Factory(DefaultDashChunkSource.Factory(dataSourceFactory), dataSourceFactory)
+            .setManifestParser(LiveDashManifestParser())
+            .createMediaSource(mediaItem.buildUpon().setUri(url).setMimeType(MimeTypes.APPLICATION_MPD).build())
+
+    /** The HLS playlist, used when the live answer has no DASH url. */
+    private fun liveHls(url: String, mediaItem: MediaItem): MediaSource =
+        HlsMediaSource.Factory(dataSourceFactory)
+            .setAllowChunklessPreparation(true)
+            .createMediaSource(mediaItem.buildUpon().setUri(url).setMimeType(MimeTypes.APPLICATION_M3U8).build())
 
     private fun source(stream: Stream, durationSec: Long, mediaItem: MediaItem): MediaSource {
         val url = stream.content

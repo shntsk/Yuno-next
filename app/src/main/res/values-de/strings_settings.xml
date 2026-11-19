@@ -17,7 +17,6 @@
     <string name="settings_speed_remember_off">Jedes Video startet mit 1×</string>
     <string name="settings_speed_kept_summary">Tempo bleibt bei %1$s×</string>
     <string name="settings_speed_per_video">Tempo pro Video</string>
-    <string name="settings_audio_only_line">Ton ohne Bild, in jedem Video. Auch in der Leiste des Players.</string>
     <string name="settings_sb_summary">Überspringt %1$s, fragt bei %2$s</string>
     <string name="settings_mode">Modus</string>
     <string name="settings_theme">Design</string>

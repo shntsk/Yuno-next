@@ -17,7 +17,6 @@
     <string name="settings_speed_remember_off">Setiap video dimulai pada 1×</string>
     <string name="settings_speed_kept_summary">kecepatan tetap %1$s×</string>
     <string name="settings_speed_per_video">kecepatan per video</string>
-    <string name="settings_audio_only_line">Suara tanpa gambar, di setiap video. Juga ada di bilah pemutar.</string>
     <string name="settings_sb_summary">Melewati %1$s, menanyakan %2$s</string>
     <string name="settings_mode">Mode</string>
     <string name="settings_theme">Tema</string>

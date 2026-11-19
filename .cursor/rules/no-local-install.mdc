@@ -1,0 +1,12 @@
+---
+description: Do not build or install Yuno from here — the user installs from Android Studio
+alwaysApply: true
+---
+
+# Do not build or install
+
+The user installs Yuno from Android Studio. Do not run Gradle, `installDebug`, `assembleDebug`, `compileDebugKotlin`, or adb install from this session.
+
+The one exception is a release they have already confirmed, in `yuno-release.mdc`: `scripts/publish-apk.sh` may build the production APK and publish it. Still do not install that APK on the phone.
+
+After a code change, stop. Do not launch the app, push a build, or refresh it on the phone. Say what changed and leave the run to them.

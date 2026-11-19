@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The open player's bar (the tab bar turns into it): play, -10 / +10, audio only, the ⋮ key. -->
+    <!-- The open player's bar (the tab bar turns into it): play, -10 / +10, the ⋮ key. -->
     <!-- Accessibility labels of the bar's play button. -->
     <string name="bar_play">Phát</string>
     <string name="bar_pause">Tạm dừng</string>
@@ -9,9 +9,6 @@
     <string name="bar_more_controls">Thêm nút điều khiển</string>
     <!-- Accessibility label of the ✕ the ⋮ key turns into. -->
     <string name="bar_close">Đóng</string>
-    <!-- Accessibility labels of the audio only button (plays sound without the picture). -->
-    <string name="bar_audio_only">Chỉ âm thanh</string>
-    <string name="bar_audio_only_on">Đang bật chỉ âm thanh</string>
 
     <!-- Tool labels under 58 dp round buttons in one row (up to six): very small text, keep VERY short (~9 characters). -->
     <string name="bar_tool_speed">Tốc độ</string>

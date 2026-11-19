@@ -17,7 +17,6 @@
     <string name="settings_speed_remember_off">Ogni video parte a 1×</string>
     <string name="settings_speed_kept_summary">velocità fissa a %1$s×</string>
     <string name="settings_speed_per_video">velocità per video</string>
-    <string name="settings_audio_only_line">Audio senza immagine, in ogni video. Anche nella barra del player.</string>
     <string name="settings_sb_summary">Salta %1$s, chiede per %2$s</string>
     <string name="settings_mode">Modalità</string>
     <string name="settings_theme">Tema</string>

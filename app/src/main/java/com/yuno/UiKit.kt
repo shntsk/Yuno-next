@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.Image
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Forward10
 import androidx.compose.material.icons.rounded.Forward30
@@ -42,13 +43,20 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
@@ -72,7 +80,6 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalDensity
 import coil.compose.AsyncImage
 import kotlin.math.roundToInt
@@ -218,34 +225,98 @@ val LocalVideoMenu = staticCompositionLocalOf<(VideoItem) -> Unit> { {} }
 internal val FeedVideoThumbInset = PageGutter
 internal const val FeedVideoThumbRadius = 9
 
+/** Screen bounds of a thumbnail, so a tap can grow the player out of that picture. */
+class VideoAnchor {
+    var rect: Rect? = null
+    var radiusPx: Float = 0f
+}
+
 @Composable
-fun Thumbnail(url: String?, modifier: Modifier = Modifier, radius: Int = 22, videoId: String? = null) {
-    val model = remember(url, videoId) {
-        val id = videoId ?: url?.let(::ytVideoIdFromThumbUrl)
-        if (id != null) sharpenFeedThumbnail(url, id) else url
-    }
-    AsyncImage(
-        model = model,
-        contentDescription = null,
-        contentScale = ContentScale.Crop,
+fun rememberVideoAnchor(radius: Dp): VideoAnchor {
+    val anchor = remember { VideoAnchor() }
+    val px = with(LocalDensity.current) { radius.toPx() }
+    SideEffect { anchor.radiusPx = px }
+    return anchor
+}
+
+fun Modifier.videoAnchor(anchor: VideoAnchor): Modifier = onGloballyPositioned { coordinates ->
+    val size = coordinates.size
+    val topLeft = coordinates.localToScreen(Offset.Zero)
+    val bottomRight = coordinates.localToScreen(Offset(size.width.toFloat(), size.height.toFloat()))
+    anchor.rect = Rect(topLeft, bottomRight)
+}
+
+/** Records this thumbnail, then runs [open]. */
+fun VideoAnchor.play(open: () -> Unit) {
+    rect?.let { VideoLaunch.offer(it, radiusPx) }
+    open()
+}
+
+@Composable
+fun Thumbnail(
+    url: String?,
+    modifier: Modifier = Modifier,
+    radius: Int = 22,
+    videoId: String? = null,
+    portrait: Boolean = false,
+) {
+    ResolvedThumbnail(
+        url = url,
+        videoId = videoId,
+        portrait = portrait,
         modifier = modifier
             .clip(RoundedCornerShape(radius.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHighest),
     )
 }
 
+/**
+ * Flow's card image: [ThumbnailUrlResolver] picks `hq720`, then `hqdefault` when that file is missing.
+ * A picture that is not a YouTube video thumbnail is loaded as given.
+ */
 @Composable
-fun DurationPill(seconds: Long, modifier: Modifier = Modifier, small: Boolean = false) {
-    if (seconds <= 0) return
+fun ResolvedThumbnail(
+    url: String?,
+    modifier: Modifier = Modifier,
+    videoId: String? = null,
+    portrait: Boolean = false,
+    contentScale: ContentScale = ContentScale.Crop,
+) {
+    val models = remember(url, videoId, portrait) {
+        val id = videoId ?: url?.let(::ytVideoIdFromThumbUrl).orEmpty()
+        if (id.isNotBlank()) {
+            ThumbnailUrlResolver.resolveVideoThumbnailCandidates(id, url, ThumbnailQuality.HIGH, portrait)
+        } else {
+            listOfNotNull(url?.takeIf { it.isNotBlank() })
+        }
+    }
+    var index by remember(models) { mutableIntStateOf(0) }
+    val model = models.getOrNull(index)
+    if (model.isNullOrEmpty()) {
+        Box(modifier)
+        return
+    }
+    AsyncImage(
+        model = model,
+        contentDescription = null,
+        contentScale = contentScale,
+        modifier = modifier,
+        onError = { if (index < models.lastIndex) index += 1 },
+    )
+}
+
+@Composable
+fun DurationPill(seconds: Long, modifier: Modifier = Modifier, small: Boolean = false, live: Boolean = false) {
+    if (!live && seconds <= 0) return
     val fontSize = if (small) 10.5.sp else 11.5.sp
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(4.dp))
-            .background(Color.Black.copy(alpha = 0.72f))
+            .background(if (live) Color(0xFFCC0000) else Color.Black.copy(alpha = 0.72f))
             .padding(horizontal = if (small) 5.dp else 6.dp, vertical = if (small) 1.dp else 2.dp),
     ) {
         Text(
-            formatDuration(seconds * 1000),
+            if (live) stringResource(R.string.player_live) else formatDuration(seconds * 1000),
             color = Color.White,
             fontSize = fontSize,
             lineHeight = fontSize,
@@ -297,9 +368,10 @@ fun ChannelAvatar(
 
 /** Full-width feed row: inset thumbnail, then avatar + title + meta. */
 @Composable
-fun VideoCard(video: VideoItem, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun VideoCard(video: VideoItem, onClick: () -> Unit, modifier: Modifier = Modifier, metaColor: Color? = null) {
     val c = MaterialTheme.colorScheme
     val menu = LocalVideoMenu.current
+    val anchor = rememberVideoAnchor(FeedVideoThumbRadius.dp)
     Column(
         modifier
             .fillMaxWidth()
@@ -310,12 +382,13 @@ fun VideoCard(video: VideoItem, onClick: () -> Unit, modifier: Modifier = Modifi
                 lift = true,
                 liftPadding = PaddingValues(horizontal = PageGutter),
                 onLongClick = { menu(video) },
-                onClick = onClick,
+                onClick = { anchor.play(onClick) },
             ),
     ) {
         Box(
             Modifier
                 .padding(horizontal = FeedVideoThumbInset)
+                .videoAnchor(anchor)
                 .clip(RoundedCornerShape(FeedVideoThumbRadius.dp)),
         ) {
             Thumbnail(
@@ -324,7 +397,7 @@ fun VideoCard(video: VideoItem, onClick: () -> Unit, modifier: Modifier = Modifi
                 radius = FeedVideoThumbRadius,
                 videoId = video.id,
             )
-            DurationPill(video.durationSec, Modifier.align(Alignment.BottomEnd).padding(5.dp))
+            DurationPill(video.durationSec, Modifier.align(Alignment.BottomEnd).padding(5.dp), live = video.live)
             ResumeBar(video.id, Modifier.align(Alignment.BottomStart))
         }
         Row(modifier = Modifier.padding(horizontal = PageGutter, vertical = 12.dp)) {
@@ -345,7 +418,7 @@ fun VideoCard(video: VideoItem, onClick: () -> Unit, modifier: Modifier = Modifi
                 Spacer(Modifier.height(1.dp))
                 Text(
                     metaLine(video.channel, video.views, video.uploaded),
-                    color = c.onSurfaceVariant,
+                    color = metaColor ?: c.onSurfaceVariant,
                     fontSize = 12.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -360,17 +433,18 @@ fun VideoCard(video: VideoItem, onClick: () -> Unit, modifier: Modifier = Modifi
 fun VideoRow(video: VideoItem, onClick: () -> Unit, trailing: (@Composable () -> Unit)? = null) {
     val c = MaterialTheme.colorScheme
     val menu = LocalVideoMenu.current
+    val anchor = rememberVideoAnchor(16.dp)
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp)
             .prefetchOnPress(video.id)
-            .pressable(pressedScale = 0.97f, lift = true, onLongClick = { menu(video) }, onClick = onClick),
+            .pressable(pressedScale = 0.97f, lift = true, onLongClick = { menu(video) }, onClick = { anchor.play(onClick) }),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.width(140.dp)) {
+        Box(Modifier.width(140.dp).videoAnchor(anchor)) {
             Thumbnail(video.thumbnail, Modifier.fillMaxWidth().aspectRatio(16f / 9f), radius = 16)
-            DurationPill(video.durationSec, Modifier.align(Alignment.BottomEnd).padding(6.dp), small = true)
+            DurationPill(video.durationSec, Modifier.align(Alignment.BottomEnd).padding(6.dp), small = true, live = video.live)
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
@@ -403,6 +477,21 @@ fun ResumeBar(videoId: String, modifier: Modifier = Modifier) {
 }
 
 // ── Empty / error states ───────────────────────────────────────────────────────
+
+/** One line in the middle of the page. Empty pages use this. */
+@Composable
+fun EmptyLine(text: String, modifier: Modifier = Modifier) {
+    Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(
+            text,
+            Modifier.padding(horizontal = 32.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
 
 @Composable
 fun EmptyState(

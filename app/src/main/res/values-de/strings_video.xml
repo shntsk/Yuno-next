@@ -5,9 +5,6 @@
     <string name="video_bot_check_waiting">YouTube prüft diese Verbindung. Neuer Versuch…</string>
 
     <!-- Accessibility labels of the round buttons on the video. -->
-    <string name="video_audio_only">Nur Audio</string>
-    <!-- Accessibility label of the filled audio-only button shown while audio only is on (tap turns it off). -->
-    <string name="video_audio_only_on">Nur Audio ist an</string>
     <string name="video_playback_speed">Wiedergabegeschwindigkeit</string>
     <string name="video_captions">Untertitel</string>
     <string name="video_quality">Qualität</string>

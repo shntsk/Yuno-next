@@ -1,5 +1,5 @@
 <resources>
-    <!-- The open player's bar (the tab bar turns into it): play, -10 / +10, audio only, the ⋮ key. -->
+    <!-- The open player's bar (the tab bar turns into it): play, -10 / +10, the ⋮ key. -->
     <!-- Accessibility labels of the bar's play button. -->
     <string name="bar_play">Wiedergeben</string>
     <string name="bar_pause">Pausieren</string>
@@ -8,9 +8,6 @@
     <string name="bar_more_controls">Weitere Steuerelemente</string>
     <!-- Accessibility label of the ✕ the ⋮ key turns into. -->
     <string name="bar_close">Schließen</string>
-    <!-- Accessibility labels of the audio only button (plays sound without the picture). -->
-    <string name="bar_audio_only">Nur Audio</string>
-    <string name="bar_audio_only_on">Nur Audio ist an</string>
 
     <!-- Tool labels under 58 dp round buttons in one row (up to six): very small text, keep VERY short (~9 characters). -->
     <string name="bar_tool_speed">Tempo</string>

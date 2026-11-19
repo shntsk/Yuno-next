@@ -123,7 +123,6 @@ import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
-import coil.compose.AsyncImage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
@@ -1358,22 +1357,22 @@ private fun ShortPage(shorts: ShortsState, page: Int, overlayBottom: Dp, barProg
         val videoStart = if (!wide || window.foldX != null) 0.dp else (maxWidth - videoWidth) / 2
         if (wide) {
             // Either side: the short's own colours, blurred and dimmed.
-            AsyncImage(
-                model = item.thumbnail, contentDescription = null, contentScale = ContentScale.Crop,
+            ResolvedThumbnail(
+                url = item.thumbnail, videoId = item.id, portrait = true, contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize().blur(48.dp).graphicsLayer { alpha = 0.55f },
             )
         }
         Box(Modifier.fillMaxSize().clipToBounds()) {
-            // Vertical shorts fill a phone's screen (a little cropped at the sides); wider ones fit its width.
+            // The short fits inside the screen. A smaller picture keeps black bars instead of being enlarged.
             Box(
                 Modifier
                     .padding(start = videoStart)
                     .width(videoWidth)
                     .fillMaxHeight()
-                    .aspectFit(aspect, cover = !wide && aspect < 0.7f)
+                    .aspectFit(aspect)
                     .onGloballyPositioned { shorts.videoRects[page] = Rect(it.positionInRoot(), it.size.toSize()) },
             ) {
-                AsyncImage(model = item.thumbnail, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                ResolvedThumbnail(url = item.thumbnail, videoId = item.id, portrait = true, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                 ShortVideo(shorts, page, Modifier.fillMaxSize())
             }
         }

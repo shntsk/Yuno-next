@@ -86,29 +86,6 @@ object PlaybackSpeed {
 }
 
 /**
- * Audio only (Derek, 2026-10-13): one switch for the whole app, kept until turned off. The
- * player's video track is disabled (as in the background), so no video is fetched or
- * decoded; the open player shows only its playback controls and can't go fullscreen.
- */
-object AudioOnly {
-    private const val KEY = "audio_only"
-    private var prefs: SharedPreferences? = null
-
-    var enabled by mutableStateOf(false)
-        private set
-
-    fun init(context: Context) {
-        prefs = context.getSharedPreferences("playback", Context.MODE_PRIVATE)
-        enabled = prefs?.getBoolean(KEY, false) == true
-    }
-
-    fun set(on: Boolean) {
-        enabled = on
-        prefs?.edit()?.putBoolean(KEY, on)?.apply()
-    }
-}
-
-/**
  * Where the open portrait player's controls live (Derek, 2026-10-31; a choice in the account sheet):
  * in the playback pill the tab bar turns into (PlayerBar.kt, the default since 0.5.34), or on the
  * video itself (VideoContent's overlay, its bottom edge a playback head with a knob to scrub). On the
@@ -183,7 +160,7 @@ object ChaptersStayOpen {
 
 /**
  * Picture-in-picture by itself (#42): leaving the app (Home, Recents, another app) while a video plays
- * turns it into the floating window. Off by default (Derek): background play is audio only then.
+ * turns it into the floating window. Off by default (Derek): leaving the app keeps playing in the background.
  */
 object AutoPip {
     private const val KEY = "auto_pip"

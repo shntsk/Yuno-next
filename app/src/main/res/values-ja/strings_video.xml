@@ -5,9 +5,6 @@
     <string name="video_bot_check_waiting">YouTube がこの接続を確認しています。再試行中…</string>
 
     <!-- Accessibility labels of the round buttons on the video. -->
-    <string name="video_audio_only">音声のみ</string>
-    <!-- Accessibility label of the filled audio-only button shown while audio only is on (tap turns it off). -->
-    <string name="video_audio_only_on">音声のみ: オン</string>
     <string name="video_playback_speed">再生速度</string>
     <string name="video_captions">字幕</string>
     <string name="video_quality">画質</string>

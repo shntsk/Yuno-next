@@ -28,6 +28,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -71,8 +72,17 @@ class FeedState(
     /** The category chips YouTube put over the feed's first page (Home); empty when it sent none. */
     var chips by mutableStateOf<List<FeedChip>>(emptyList())
         private set
+    /** Channel Videos filters (a sort sheet plus chips). Empty on Home. */
+    var filters by mutableStateOf<List<ChannelFilterGroup>>(emptyList())
+        private set
     /** The chip whose feed is shown; null = the plain feed (the chip without a token, "All"). */
     var chip by mutableStateOf<FeedChip?>(null)
+        private set
+    /** A playlist's owner, from the first page's header. */
+    var playlistOwner by mutableStateOf<String?>(null)
+        private set
+    /** A playlist's description, from the first page's header. Empty when YouTube sent none. */
+    var playlistDescription by mutableStateOf("")
         private set
     private var next: String? = null
     private var loaded = false
@@ -88,6 +98,12 @@ class FeedState(
     val waiting get() = !loaded
     /** Loaded, and YouTube sent no videos at all (no error either). */
     val loadedEmpty get() = loaded && !loading && error == null && videos.isEmpty()
+
+    /**
+     * Where this feed is scrolled. Lives here, not in the list on screen, so opening a video,
+     * channel, playlist, or short and coming back lands on the same row.
+     */
+    val scroll = LazyListState()
 
     fun ensureLoaded() { if (!loaded && !loading) refresh() }
 
@@ -138,6 +154,12 @@ class FeedState(
                     if (pick == null) {
                         chips = it.chips
                         if (freshOnRefresh) it.videos.forEach { v -> shown += v.id }
+                    }
+                    // A continuation of a chosen filter often has no chip bar. Keep the one already shown.
+                    if (pick == null || it.filters.isNotEmpty()) filters = it.filters
+                    it.playlistHeader?.let { header ->
+                        playlistOwner = header.owner
+                        playlistDescription = header.description
                     }
                     it.videos.take(prefetchTop).forEach { v -> StreamCache.prefetch(v.id) }
                 }
@@ -193,6 +215,7 @@ class FeedState(
         shown.clear()
         videos = emptyList(); next = null; loaded = false; loading = false; error = null
         chips = emptyList(); chip = null; landedAt = 0L
+        scroll.requestScrollToItem(0)
     }
 
     private companion object {
@@ -218,6 +241,30 @@ class LibraryData(scope: CoroutineScope, context: Context) {
     val home = FeedState(scope, prefetchTop = 2, freshOnRefresh = true) { next ->
         if (Account.signedIn) InnerTube.home(next) else InnerTube.guestHome(next)
     }
+    private val categories = mutableMapOf<String, FeedState>()
+
+    /** One feed per recommendation tab. The chip with no token is [home] itself. */
+    fun category(chip: FeedChip): FeedState {
+        val token = chip.token ?: return home
+        return categories.getOrPut(token) {
+            FeedState(scope, prefetchTop = 2) { next ->
+                val page = next ?: token
+                if (Account.signedIn) InnerTube.home(page) else InnerTube.guestHome(page)
+            }
+        }
+    }
+
+    /** [home] for the plain chip. A category only after that tab has been opened, so a swipe does not create it. */
+    fun feedIfOpen(chip: FeedChip): FeedState? {
+        val token = chip.token ?: return home
+        return categories[token]
+    }
+
+    /** The recommendation tab left on screen, so coming back opens that one, still scrolled. */
+    var homePage by mutableStateOf(0)
+
+    /** The Library column. A playlist opened from it returns to the same spot. */
+    val libraryScroll = LazyListState()
     val subscriptions = FeedState(scope, prefetchTop = 2) { InnerTube.subscriptionsFeed(it) }
     val history = FeedState(scope) { InnerTube.history(it) }
     private val prefs = context.getSharedPreferences(CHANNELS_PREFS, Context.MODE_PRIVATE)
@@ -270,6 +317,10 @@ class LibraryData(scope: CoroutineScope, context: Context) {
 
     fun reset() {
         home.reset(); subscriptions.reset(); history.reset()
+        categories.values.forEach { it.reset() }
+        categories.clear()
+        homePage = 0
+        libraryScroll.requestScrollToItem(0)
         channelsJob?.cancel(); channelsJob = null; subscriptionsShown = false
         channels = emptyList(); playlists = emptyList()
         prefs.edit().remove(KEY_CHANNELS).apply()
@@ -335,10 +386,12 @@ fun LazyListScope.videoCards(
     onOpen: (VideoItem) -> Unit,
     /** A card of its own in the grid's second spot (Home's Shorts card); grids only. */
     extra: (@Composable (Modifier) -> Unit)? = null,
+    /** The line under the title. Channel pages pass the artist-line secondary. */
+    metaColor: Color? = null,
 ) {
     val videos = if (videos.any(Dismissed::hides)) videos.filterNot(Dismissed::hides) else videos
     if (columns <= 1) {
-        items(videos, key = { it.id }, contentType = { "video" }) { video -> VideoCard(video, onClick = { onOpen(video) }) }
+        items(videos, key = { it.id }, contentType = { "video" }, contentType = { "video" }) { video -> VideoCard(video, onClick = { onOpen(video) }, metaColor = metaColor) }
         return
     }
     val cells: List<Any> = if (extra != null && videos.isNotEmpty()) videos.take(1) + ExtraCell + videos.drop(1) else videos
@@ -346,7 +399,7 @@ fun LazyListScope.videoCards(
     items(cells.chunked(columns), key = { row -> "row-" + (row.first() as VideoItem).id }, contentType = { "row" }) { row ->
         Row(Modifier.fillMaxWidth().padding(horizontal = 5.dp)) {
             row.forEach { cell ->
-                if (cell is VideoItem) VideoCard(cell, onClick = { onOpen(cell) }, modifier = Modifier.weight(1f))
+                if (cell is VideoItem) VideoCard(cell, onClick = { onOpen(cell) }, modifier = Modifier.weight(1f), metaColor = metaColor)
                 else extra?.invoke(Modifier.weight(1f))
             }
             repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
@@ -389,7 +442,7 @@ fun FeedList(
     indicatorTop: Dp = 0.dp,
     /** A card of its own in a grid's second spot (wide windows only). */
     gridExtra: (@Composable (Modifier) -> Unit)? = null,
-    /** Shared with the page so a fade can follow this list. Created here when omitted. */
+    /** Shared with the page so a fade can follow this list. [FeedState.scroll] when omitted. */
     listState: LazyListState? = null,
     /** When set, shown instead of [FeedState.videos] (e.g. subscriptions channel filter). */
     videos: List<VideoItem>? = null,
@@ -403,11 +456,14 @@ fun FeedList(
     LaunchedEffect(listVideos, channelAvatarSeed) {
         ChannelAvatars.resolve(scope, listVideos, channelAvatarSeed)
     }
-    val created = rememberLazyListState()
-    val list = rememberScrollToTop(scrollToTop, listState ?: created)
+    val list = rememberScrollToTop(scrollToTop, listState ?: feed.scroll)
     // A refresh or a new chip starts at the top. The first page landing does not,
     // so scrolling the skeletons is kept when the videos arrive.
-    LaunchedEffect(feed.generation, filterScrollKey) { list.scrollToItem(0) }
+    val openedAt = remember { feed.generation to filterScrollKey }
+    LaunchedEffect(feed.generation, filterScrollKey) {
+        if (feed.generation to filterScrollKey == openedAt) return@LaunchedEffect
+        list.scrollToItem(0)
+    }
     val nearEnd by remember {
         derivedStateOf {
             val last = list.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0

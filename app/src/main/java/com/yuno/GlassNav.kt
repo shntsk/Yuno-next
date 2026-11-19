@@ -54,6 +54,7 @@ fun GlassNavBar(
     onExpandPlayer: () -> Unit,
     dock: PlayerDock? = null,
     pull: MiniPlayerPull? = null,
+    showMini: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val pillShape = remember { RoundedCornerShape(percent = 50) }
@@ -63,7 +64,7 @@ fun GlassNavBar(
     val haptics = rememberBarHaptics()
     val currentOnTabSelected by rememberUpdatedState(onTabSelected)
     val glassSurface: @Composable () -> Modifier = { Modifier.liquidGlass(shape = pillShape) }
-    val song = if (selected == Tab.Shorts) null else player.current
+    val song = if (selected == Tab.Shorts || !showMini) null else player.current
 
     FloatingTabBar(
         selectedTabKey = selected,

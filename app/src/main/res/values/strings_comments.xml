@@ -11,6 +11,11 @@
     <string name="comments_close">Close comments</string>
     <!-- Shown at the bottom of the comments panel instead of the comment box when signed out. -->
     <string name="comments_sign_in_to_comment">Sign in to comment.</string>
+    <string name="live_chat">Live chat</string>
+    <string name="live_chat_empty">No messages yet</string>
+    <string name="live_chat_close">Close live chat</string>
+    <string name="live_chat_hint">Say something…</string>
+    <string name="live_chat_sign_in">Sign in to chat.</string>
     <!-- Above the comment box while replying. %1$s = the name of the person replied to. -->
     <string name="comments_replying_to">Replying to %1$s</string>
     <!-- Accessibility label of the X that stops replying. -->

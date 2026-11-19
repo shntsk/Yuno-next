@@ -20,6 +20,12 @@ GH="$(command -v gh || echo "$HOME/.local/bin/gh")"
 
 version="$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' app/build.gradle.kts)"
 tag="v$version"
+# origin is Yuno. A remote named upstream makes gh publish to that repo instead.
+origin_url="$(git remote get-url origin)"
+origin_repo="${origin_url%.git}"
+origin_repo="${origin_repo#https://github.com/}"
+origin_repo="${origin_repo#git@github.com:}"
+repo_flag=(--repo "$origin_repo")
 
 # The lines under "## <heading>" up to the next "## ".
 section() { awk -v h="$1" '/^## /{ if (on) exit; on = (substr($0, 4) == h); next } on' CHANGELOG.md; }
@@ -39,18 +45,18 @@ body="$(dirname "$apk")/notes.md"
 printf '%s\n\n---\n\nInstall Yuno.apk on Android (allow installs from your browser or file manager). Installed copies update from the Update button on Home.\n' \
   "$(sed -e '/./,$!d' <<<"$notes")" >"$body"
 
-if "$GH" release view "$tag" >/dev/null 2>&1; then
-  "$GH" release upload "$tag" "$apk" --clobber
-  "$GH" release edit "$tag" --latest --notes-file "$body"
+if "$GH" release view "$tag" "${repo_flag[@]}" >/dev/null 2>&1; then
+  "$GH" release upload "$tag" "$apk" --clobber "${repo_flag[@]}"
+  "$GH" release edit "$tag" --latest --notes-file "$body" "${repo_flag[@]}"
 else
-  "$GH" release create "$tag" "$apk" --title "Yuno $version" --latest --notes-file "$body"
+  "$GH" release create "$tag" "$apk" --title "Yuno $version" --latest --notes-file "$body" "${repo_flag[@]}"
 fi
 
 # The published notes become this version's section; a fresh, empty Unreleased goes above it.
 if [[ "$from" == "Unreleased" ]]; then
-  V="$version" perl -0pi -e 's/^## Unreleased\n/## Unreleased\n\n## $ENV{V}\n/m' CHANGELOG.md
+  V="$version" perl -0pi -e 's/^## Unreleased(\r?\n)/## Unreleased$1$1## $ENV{V}$1/m' CHANGELOG.md
   echo "CHANGELOG.md: Unreleased is now $version (commit it)"
 fi
 
-repo="$("$GH" repo view --json nameWithOwner -q .nameWithOwner)"
+repo="$("$GH" repo view "$origin_repo" --json nameWithOwner -q .nameWithOwner)"
 echo "Published $tag: https://github.com/$repo/releases/latest/download/Yuno.apk"

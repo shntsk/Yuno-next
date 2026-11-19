@@ -86,7 +86,7 @@ object CrashLog {
         appendLine("Phone: ${Build.MANUFACTURER} ${Build.MODEL} (${Build.DEVICE}), Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
         appendLine("Build: ${Build.DISPLAY}")
         appendLine("Memory: app heap ${am.largeMemoryClass} MB (large) / ${am.memoryClass} MB, phone ${mb(ram.totalMem)} MB, ${mb(ram.availMem)} MB free now")
-        appendLine("Settings: Shorts ${onOff(ShortsSetting.enabled)}, audio only ${onOff(AudioOnly.enabled)}, controls ${if (PlayerControls.inBar) "in the bar" else "on the video"}, signed in ${onOff(Account.signedIn)}")
+        appendLine("Settings: Shorts ${onOff(ShortsSetting.enabled)}, controls ${if (PlayerControls.inBar) "in the bar" else "on the video"}, signed in ${onOff(Account.signedIn)}")
         appendLine()
         appendLine("## Crashes")
         val saved = files()

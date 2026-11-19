@@ -17,7 +17,6 @@
     <string name="settings_speed_remember_off">Каждое видео начинается на 1×</string>
     <string name="settings_speed_kept_summary">скорость %1$s× сохраняется</string>
     <string name="settings_speed_per_video">скорость для каждого видео</string>
-    <string name="settings_audio_only_line">Звук без изображения во всех видео. Также на панели плеера.</string>
     <string name="settings_sb_summary">Пропускает: %1$s, спрашивает: %2$s</string>
     <string name="settings_mode">Режим</string>
     <string name="settings_theme">Тема</string>

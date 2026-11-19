@@ -17,7 +17,6 @@
     <string name="settings_speed_remember_off">Her video 1× hızla başlar</string>
     <string name="settings_speed_kept_summary">hız sabit: %1$s×</string>
     <string name="settings_speed_per_video">hız videoya göre</string>
-    <string name="settings_audio_only_line">Her videoda görüntüsüz ses. Oynatıcı çubuğunda da var.</string>
     <string name="settings_sb_summary">Atlanan: %1$s, sorulan: %2$s</string>
     <string name="settings_mode">Mod</string>
     <string name="settings_theme">Tema</string>

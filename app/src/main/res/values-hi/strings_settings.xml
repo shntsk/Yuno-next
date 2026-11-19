@@ -17,7 +17,6 @@
     <string name="settings_speed_remember_off">हर वीडियो 1× पर शुरू होता है</string>
     <string name="settings_speed_kept_summary">स्पीड %1$s× पर तय</string>
     <string name="settings_speed_per_video">हर वीडियो की अपनी स्पीड</string>
-    <string name="settings_audio_only_line">हर वीडियो में बिना तस्वीर के सिर्फ़ आवाज़. प्लेयर बार में भी.</string>
     <string name="settings_sb_summary">%1$s छोड़ता है, %2$s के लिए पूछता है</string>
     <string name="settings_mode">मोड</string>
     <string name="settings_theme">थीम</string>

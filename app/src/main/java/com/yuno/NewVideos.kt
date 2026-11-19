@@ -235,7 +235,9 @@ object NewVideos {
 
     private fun notify(context: Context, ch: BellChannel, channelName: String, entry: FeedEntry) {
         if (!canNotify(context)) return
-        val thumbnail = runCatching { fetchBitmap("https://i.ytimg.com/vi/${entry.id}/mqdefault.jpg") }.getOrNull()
+        val thumbnail = ThumbnailUrlResolver.youtubeThumbnailCandidates(entry.id).firstNotNullOfOrNull { url ->
+            runCatching { fetchBitmap(url) }.getOrNull()
+        }
         val open = Intent(context, MainActivity::class.java)
             .setAction(Intent.ACTION_VIEW)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
@@ -283,7 +285,7 @@ object NewVideos {
             title = intent.getStringExtra(EXTRA_TITLE).orEmpty(),
             channel = intent.getStringExtra(EXTRA_CHANNEL).orEmpty(),
             channelUrl = intent.getStringExtra(EXTRA_CHANNEL_ID)?.let { "https://www.youtube.com/channel/$it" },
-            thumbnail = "https://i.ytimg.com/vi/$id/hqdefault.jpg",
+            thumbnail = ThumbnailUrlResolver.buildHighQualityYoutubeThumbnail(id),
             avatar = intent.getStringExtra(EXTRA_AVATAR),
             durationSec = 0, views = 0, uploaded = null,
         )

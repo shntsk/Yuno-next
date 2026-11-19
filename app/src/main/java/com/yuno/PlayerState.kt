@@ -8,6 +8,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -18,6 +19,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
@@ -64,6 +66,11 @@ class PlayerState(private val scope: CoroutineScope) {
         private set
     var durationMs by mutableLongStateOf(0L)
         private set
+    /** On air now. [liveDvr] is a window you can rewind; otherwise the bar stays full and locked. */
+    var live by mutableStateOf(false)
+        private set
+    var liveDvr by mutableStateOf(false)
+        private set
     /** The player's playback speed (see [PlaybackSpeed]). */
     var speed by mutableFloatStateOf(1f)
         private set
@@ -87,7 +94,8 @@ class PlayerState(private val scope: CoroutineScope) {
                 syncFromPlayer()
                 if (failed != null && failed.first == current?.id) {
                     botCheck = failed.second is org.schabi.newpipe.extractor.exceptions.SignInConfirmNotBotException
-                    error = YouTube.friendlyError(failed.second)
+                    error = if (failed.second.message == "YouTube refused the stream") "YouTube refused the stream. Try again."
+                    else YouTube.friendlyError(failed.second)
                     isBuffering = false
                 }
             }
@@ -100,7 +108,7 @@ class PlayerState(private val scope: CoroutineScope) {
 
     /**
      * The portrait player's shape: the video's own, within [StageMinAspect]..[StageMaxAspect].
-     * Audio only keeps it too (Derek, 2026-10-14), so switching never moves the page.
+     * Wider than 16:9 keeps the 16:9 frame and letterboxes.
      */
     val stageAspect: Float get() = videoAspect.coerceIn(StageMinAspect, StageMaxAspect).coerceAtLeast(stageFloor)
     /**
@@ -119,15 +127,18 @@ class PlayerState(private val scope: CoroutineScope) {
     var blankUntilFrame by mutableStateOf(false)
         private set
     /**
-     * The shared video surface still holds the frame from when audio only began. Turning video
-     * back on switches straight away, so the picture stays hidden (thumbnail + spinner) until
-     * the renderer draws a fresh frame, instead of showing that frozen one. Starting in audio
-     * only, the surface has no frame of this video yet either.
+     * This open grew out of a thumbnail. Keep that picture up until the new
+     * video's own frame, including after the open animation has finished.
      */
-    var videoStale by mutableStateOf(AudioOnly.enabled)
+    var coverWithPoster by mutableStateOf(false)
         private set
-    /** Only once video is wanted again: going into audio only, the last frame stays as the audio stage fades over it. */
-    val hidesStaleVideo: Boolean get() = videoStale && !AudioOnly.enabled
+    /**
+     * The shared surface still holds an old frame. The picture stays hidden (thumbnail + spinner)
+     * until the renderer draws a fresh one.
+     */
+    var videoStale by mutableStateOf(false)
+        private set
+    val hidesStaleVideo: Boolean get() = videoStale
     /** What the decoder is really producing, e.g. "1920×1080 · H.264 · itag 299". */
     var playingFormat by mutableStateOf<String?>(null)
         private set
@@ -136,6 +147,20 @@ class PlayerState(private val scope: CoroutineScope) {
         private set
 
     var expanded by mutableStateOf(false)
+
+    /**
+     * A video was just opened from a page (a card, a row, Play). The full player
+     * comes up on its own; the mini player stays hidden until this open settles.
+     * Expanding the mini player leaves it false.
+     */
+    var openingFromPage by mutableStateOf(false)
+
+    /** A different video was chosen. The shell plays the thumbnail open if the full player isn't already up. */
+    var pendingPageOpen by mutableStateOf(false)
+
+    /** Bumped on every expand request, so a tap still registers while the sheet is already open or closing. */
+    var openRequest by mutableIntStateOf(0)
+        private set
     /** Fullscreen: requested (button, swipe up; upright for a vertical video) or entered (rotation). */
     var fullscreen by mutableStateOf(false)
     /** Which bottom sheet is open over the player, if any. */
@@ -143,6 +168,8 @@ class PlayerState(private val scope: CoroutineScope) {
     /** Last scroll offset in the description panel, kept when navigating away from the player. */
     var descriptionScroll by mutableIntStateOf(0)
 
+    val liveChat = LiveChat(scope)
+    private var lastLiveEdgeMs = 0L
     val comments = CommentsState(scope).apply {
         onTimestampClick = { timestampMs ->
             val knownDuration = durationMs.takeIf { it > 0L }
@@ -173,6 +200,9 @@ class PlayerState(private val scope: CoroutineScope) {
     private var loadJob: Job? = null
     /** A video picked before the service connection finished; started on connect. */
     private var pendingStart: VideoItem? = null
+    /** A playlist picked before the connection finished, with the row it should start on. */
+    private var pendingList: List<VideoItem>? = null
+    private var pendingIndex = 0
 
     // ── Queue ──
     // The player's playlist is always [current, ...queue]: opening a video swaps the
@@ -184,10 +214,76 @@ class PlayerState(private val scope: CoroutineScope) {
         private set
 
     fun open(item: VideoItem, expand: Boolean = true) {
-        if (expand) expanded = true
-        if (current?.id == item.id && error == null) return
+        val same = current?.id == item.id && error == null
+        if (expand) {
+            // The video already in the bar just expands. A different one may grow from its thumbnail.
+            if (!same) pendingPageOpen = true
+            expanded = true
+            openRequest++
+        }
+        if (same) return
         known[item.id] = item
         show(item, startPlayback = true)
+    }
+
+    /** The shell is actually running the thumbnail open, so the picture stays the poster until the frame. */
+    fun usePosterCover() {
+        if (!firstFrameRendered) coverWithPoster = true
+    }
+
+    fun takePageOpen(): Boolean {
+        val pending = pendingPageOpen
+        pendingPageOpen = false
+        return pending
+    }
+
+    /**
+     * Plays [items] as one queue, starting at [start]. [shuffle] reorders a copy first and
+     * starts at the new front. The list on screen is left as it is.
+     */
+    fun openList(items: List<VideoItem>, start: Int = 0, shuffle: Boolean = false) {
+        val order = items.filter { it.id.isNotBlank() }.let { if (shuffle) it.shuffled() else it }
+        if (order.isEmpty()) return
+        val index = if (shuffle) 0 else start.coerceIn(0, order.lastIndex)
+        if (!shuffle && current?.id == order[index].id && error == null) {
+            expanded = true
+            openRequest++
+            return
+        }
+        order.forEach { known[it.id] = it }
+        pendingPageOpen = true
+        expanded = true
+        openRequest++
+        val player = controller
+        if (player == null) {
+            pendingList = order
+            pendingIndex = index
+            pendingStart = null
+            show(order[index], startPlayback = false)
+            return
+        }
+        startList(player, order, index)
+    }
+
+    private fun startList(player: MediaController, order: List<VideoItem>, index: Int) {
+        SavedSession.resumeSaving()
+        Net.prewarmMediaConnection()
+        val item = order[index]
+        if (current != null && current?.id != item.id) {
+            blankUntilFrame = true
+            player.pause()
+        }
+        val position = ResumeStore.startPosition(item.id)
+        swapping = true
+        try {
+            player.setMediaItems(order.map { mediaItemFor(it) }, index, position)
+        } finally {
+            swapping = false
+        }
+        player.prepare()
+        player.play()
+        show(item, startPlayback = false)
+        rebuildQueue()
     }
 
     /**
@@ -198,6 +294,7 @@ class PlayerState(private val scope: CoroutineScope) {
     private var openedAt = 0L
 
     private fun show(item: VideoItem, startPlayback: Boolean) {
+        if (current?.id != item.id) VideoTopSampler.holdForPoster()
         // Drop the video already on screen before its replacement has anything to show.
         if (startPlayback && current != null && current?.id != item.id) {
             blankUntilFrame = true
@@ -220,6 +317,7 @@ class PlayerState(private val scope: CoroutineScope) {
         loading = true
         sheet = null
         comments.clearFor(item.id)
+        liveChat.stop()
         captions.clear()
         accountState = null
         inWatchLater = false
@@ -242,8 +340,8 @@ class PlayerState(private val scope: CoroutineScope) {
                     // The player takes the video's shape before its first frame arrives.
                     if (!aspectFromFrames) d.aspect?.let { videoAspect = it }
                     // Comments wait for the stream data: their request duplicates the video
-                    // page fetch and only slowed down the critical path.
-                    comments.load(item.id)
+                    // page fetch and only slowed down the critical path. A live video gets chat.
+                    if (d.live) liveChat.start(item.id) else comments.load(item.id)
                     known[item.id] = d.item
                     // Refresh the history row with title/thumb/duration from details.
                     WatchHistory.record(d.item)
@@ -280,7 +378,9 @@ class PlayerState(private val scope: CoroutineScope) {
         SavedSession.resumeSaving()
         val player = controller ?: run { pendingStart = item; return }
         // Pick up where this video was left off (ResumeStore; written by the service).
-        replaceCurrent(player, item, positionMs = ResumeStore.startPosition(item.id))
+        // A live stream opens on its edge. A saved spot would land in the old window.
+        val start = if (details?.live == true) C.TIME_UNSET else ResumeStore.startPosition(item.id)
+        replaceCurrent(player, item, positionMs = start)
         player.play()
     }
 
@@ -637,13 +737,25 @@ class PlayerState(private val scope: CoroutineScope) {
 
     /** Seeks by [deltaMs], clamped to the video; returns how far it actually moved. */
     fun seekBy(deltaMs: Long): Long {
+        if (live && !liveDvr) return 0L
         val player = controller ?: return 0L
         val from = player.currentPosition
         seekTo(from + deltaMs)
         return positionMs - from
     }
 
+    /** MeeTube's live chip: park about 15s behind the edge of a rewindable stream. */
+    fun jumpToLiveEdge() {
+        val player = controller ?: return
+        if (!liveDvr) return
+        val duration = player.duration
+        val to = if (duration > 15_000) duration - 15_000 else C.TIME_UNSET
+        if (to == C.TIME_UNSET) player.seekToDefaultPosition() else player.seekTo(to)
+        player.play()
+    }
+
     fun seekTo(ms: Long) {
+        if (live && !liveDvr) return
         val player = controller ?: return
         val max = player.duration.takeIf { it > 0 } ?: Long.MAX_VALUE
         val to = ms.coerceIn(0L, max)
@@ -715,16 +827,9 @@ class PlayerState(private val scope: CoroutineScope) {
 
     fun toggleRememberSpeed() = PlaybackSpeed.setRemember(!PlaybackSpeed.remember, speed)
 
-    /** Audio only for the whole app: the video track goes off (or back on) right away. */
-    fun setAudioOnly(on: Boolean) {
-        AudioOnly.set(on)
-        if (on) videoStale = true
-        applyVideoTrack()
-    }
-
     /**
-     * App left the screen. While playback continues in the background, drop the video track
-     * (audio only). If the user already paused, keep video loaded so reopening the app does
+     * App left the screen. While playback continues in the background, drop the video track.
+     * If the user already paused, keep video loaded so reopening the app does
      * not re-buffer or spin up the decoder again.
      */
     fun setBackground(background: Boolean) {
@@ -759,7 +864,7 @@ class PlayerState(private val scope: CoroutineScope) {
     /** True only after the app has been in the background long enough while playing. */
     private var backgroundVideoOff = false
     private var backgroundVideoOffJob: Job? = null
-    /** Hides the spinner while video turns back on after background audio-only. */
+    /** Hides the spinner while video turns back on after background playback. */
     private var suppressBufferingForVideoResume = false
 
     /**
@@ -773,12 +878,12 @@ class PlayerState(private val scope: CoroutineScope) {
 
     private var wantAside = false
 
-    /** Video off only after sustained background playback, Shorts aside, or audio-only mode. */
+    /** Video off only after sustained background playback, or while Shorts has the decoder. */
     private fun applyVideoTrack() {
-        val off = backgroundVideoOff || wantAside || AudioOnly.enabled
+        val off = backgroundVideoOff || wantAside
         val player = controller ?: return
         if (player.trackSelectionParameters.disabledTrackTypes.contains(androidx.media3.common.C.TRACK_TYPE_VIDEO) == off) return
-        Log.i(TAG, if (off) "video off (${if (AudioOnly.enabled) "audio only" else if (wantAside) "Shorts" else "background playback"})" else "video on")
+        Log.i(TAG, if (off) "video off (${if (wantAside) "Shorts" else "background playback"})" else "video on")
         player.trackSelectionParameters = player.trackSelectionParameters.buildUpon()
             .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, off)
             .build()
@@ -789,6 +894,8 @@ class PlayerState(private val scope: CoroutineScope) {
         controller?.run { stop(); clearMediaItems() }
         queue = emptyList()
         expanded = false
+        openingFromPage = false
+        pendingPageOpen = false
         fullscreen = false
         sheet = null
         current = null
@@ -797,6 +904,7 @@ class PlayerState(private val scope: CoroutineScope) {
         botCheck = false
         loading = false
         blankUntilFrame = false
+        coverWithPoster = false
         captions.clear()
     }
 
@@ -809,6 +917,13 @@ class PlayerState(private val scope: CoroutineScope) {
         syncFromPlayer()
         applyVideoTrack()
         controller?.videoSize?.let(::takeVideoSize)
+        pendingList?.let { list ->
+            val index = pendingIndex
+            pendingList = null
+            val player = controller ?: return
+            startList(player, list, index)
+            return
+        }
         pendingStart?.let { pendingStart = null; startPlayback(it); return }
         val player = controller ?: return
         if (player.mediaItemCount == 0 && current == null) { restoreSession(player); return }
@@ -860,6 +975,10 @@ class PlayerState(private val scope: CoroutineScope) {
         positionMs = player.currentPosition.coerceAtLeast(0L)
         bufferedMs = player.bufferedPosition.coerceAtLeast(0L)
         durationMs = player.duration.takeIf { it > 0 } ?: ((current?.durationSec ?: 0L) * 1000L)
+        val onAir = player.isCurrentMediaItemLive || details?.live == true
+        live = onAir
+        // A real rewind window is seekable and longer than the few seconds a locked live keeps buffered.
+        liveDvr = onAir && player.isCurrentMediaItemSeekable && player.duration > 30_000
         speed = player.playbackParameters.speed
         applyVideoTrack()
     }
@@ -891,18 +1010,39 @@ class PlayerState(private val scope: CoroutineScope) {
             firstFrameRendered = true
             videoStale = false
             blankUntilFrame = false
+            coverWithPoster = false
+            VideoTopSampler.releaseLive()
             suppressBufferingForVideoResume = false
         }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
-            if (playbackState == Player.STATE_READY) suppressBufferingForVideoResume = false
+            if (playbackState == Player.STATE_READY) {
+                suppressBufferingForVideoResume = false
+                if (error != null) error = null
+            }
         }
 
         override fun onPlayerError(e: PlaybackException) {
             val status = (e.cause as? androidx.media3.datasource.HttpDataSource.InvalidResponseCodeException)?.responseCode
             Log.w(TAG, "playback error ${e.errorCodeName}${status?.let { " (HTTP $it)" } ?: ""} for ${current?.id}", e)
             // A refused or expired stream URL: the service is fetching fresh links (StreamRecoverer).
-            if (e.errorCode == PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS && StreamRecovery.recovering == current?.id) return
+            // A live refusal is reloaded at the edge; the message waits until that reload gives up.
+            val onAir = live || details?.live == true || controller?.isCurrentMediaItemLive == true
+            if (e.errorCode == PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS &&
+                (StreamRecovery.recovering == current?.id || onAir)
+            ) return
+            // Fell out of the live window (a pause, or the phone slept). Jump back to the edge.
+            if (e.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW) {
+                val now = System.currentTimeMillis()
+                val player = controller
+                if (player != null && now - lastLiveEdgeMs > 15_000) {
+                    lastLiveEdgeMs = now
+                    player.seekToDefaultPosition()
+                    player.prepare()
+                    player.play()
+                    return
+                }
+            }
             error = when (e.errorCode) {
                 PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
                 PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT -> str(R.string.player_error_connection)
@@ -981,10 +1121,10 @@ fun rememberPlayerState(): PlayerState {
     return state
 }
 
-enum class PlayerSheet { Quality, Speed, Chapters, Comments, Description, Queue, Captions, Transcript }
+enum class PlayerSheet { Quality, Speed, Chapters, Comments, Description, LiveChat, Queue, Captions, Transcript }
 
-val PlayerSheet?.isPanel: Boolean get() = this == PlayerSheet.Comments || this == PlayerSheet.Description || this == PlayerSheet.Transcript
+val PlayerSheet?.isPanel: Boolean get() = this == PlayerSheet.Comments || this == PlayerSheet.Description || this == PlayerSheet.LiveChat || this == PlayerSheet.Transcript
 
 private const val TAG = "Yuno"
-/** Background audio-only kicks in only after this long; quick app switches keep video loaded. */
+/** The video track drops in the background only after this long; quick app switches keep video loaded. */
 private const val BACKGROUND_VIDEO_OFF_DELAY_MS = 2_000L

@@ -41,6 +41,7 @@
     <string name="player_create_playlist_failed">Couldn\'t create the playlist.</string>
 
     <!-- ── Errors shown over the video ── -->
+    <string name="player_live">LIVE</string>
     <string name="player_error_no_stream">No playable stream was found for this video.</string>
     <string name="player_error_connection">Lost the connection. Check your network and try again.</string>
     <string name="player_error_refused">YouTube refused the stream. Try again.</string>

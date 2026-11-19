@@ -38,10 +38,17 @@ object SearchHistory {
 
     fun clear() = save(emptyList())
 
-    /** Entries containing [query] (all of them for a blank query). */
+    /**
+     * Entries containing [query], prefix matches first, as YouTube orders them (Flow's `matchingTyped`).
+     * A blank query is the whole list, newest first.
+     */
     fun matching(query: String): List<String> {
         val q = query.trim()
-        return if (q.isEmpty()) entries else entries.filter { it.contains(q, ignoreCase = true) }
+        if (q.isEmpty()) return entries
+        val lowered = q.lowercase()
+        val matches = entries.filter { it.contains(q, ignoreCase = true) }
+        val (prefix, rest) = matches.partition { it.lowercase().startsWith(lowered) }
+        return prefix + rest
     }
 
     private fun save(list: List<String>) {

@@ -18,9 +18,10 @@ class ChannelParseTest {
 
     @Test fun homeTabs() {
         val home = InnerTube.parseChannelHome(fixture("channel_home"), veritasium)
-        assertEquals(listOf(ChannelTab.Home, ChannelTab.Videos, ChannelTab.Shorts, ChannelTab.Playlists), home.tabs.keys.toList())
+        assertEquals(listOf(ChannelTab.Home, ChannelTab.Videos, ChannelTab.Shorts, ChannelTab.Playlists, ChannelTab.Posts), home.tabs.keys.toList())
         assertEquals("EgZ2aWRlb3PyBgQKAjoA", home.tabs[ChannelTab.Videos])
         assertEquals("AF8d72mA41M", home.featured?.id)
+        assertEquals("@veritasium", home.handle)
         assertTrue(home.featured!!.title.isNotBlank())
     }
 
@@ -90,11 +91,58 @@ class ChannelParseTest {
         assertNotNull(playlists[0].thumbnail)
     }
 
+    @Test fun aboutContinuation() {
+        val token = with(InnerTube) { fixture("channel_home").channelAboutContinuation() }
+        assertNotNull(token)
+        assertTrue(token!!.isNotBlank())
+    }
+
+    @Test fun aboutLinks() {
+        val about = InnerTube.parseChannelAbout(JSONObject("""
+            {"onResponseReceivedEndpoints":[{"appendContinuationItemsAction":{"continuationItems":[{"aboutChannelViewModel":{
+              "description":"A channel",
+              "country":"United States",
+              "joinedDateText":{"content":"Joined Jan 1, 2010"},
+              "viewCountText":"1,000,000 views",
+              "videoCountText":"100 videos",
+              "subscriberCountText":"50K subscribers",
+              "canonicalChannelUrl":"http://www.youtube.com/@veritasium",
+              "links":[{"channelExternalLinkViewModel":{
+                "title":{"content":"Site"},
+                "link":{"content":"veritasium.com","commandRuns":[{"onTap":{"innertubeCommand":{"urlEndpoint":{"url":"https://www.youtube.com/redirect?q=https%3A%2F%2Fveritasium.com"}}}}]},
+                "favicon":{"sources":[{"url":"https://www.google.com/s2/favicons?domain=veritasium.com"}]}
+              }}]
+            }}]}}]}
+        """.trimIndent()))
+        assertNotNull(about)
+        assertEquals("A channel", about!!.description)
+        assertEquals("United States", about.country)
+        assertEquals("Joined Jan 1, 2010", about.joined)
+        assertEquals(1, about.links.size)
+        assertEquals("Site", about.links[0].title)
+        assertEquals("veritasium.com", about.links[0].display)
+        assertEquals("https://veritasium.com", about.links[0].url)
+    }
+
     @Test fun tabParams() {
         assertEquals(ChannelTab.Videos, InnerTube.tabOfParams("EgZ2aWRlb3MYAyAAcAPyBg0KCzoEIgIIBKIBAggB"))
         assertEquals(ChannelTab.Shorts, InnerTube.tabOfParams("EgZzaG9ydHPyBgUKA5oBAA%3D%3D"))
         assertEquals(ChannelTab.Playlists, InnerTube.tabOfParams("EglwbGF5bGlzdHPyBgoKCEIGCgIQaCIA"))
-        assertNull("posts", InnerTube.tabOfParams("EgVwb3N0c_IGBAoCSgA%3D"))
+        assertEquals(ChannelTab.Posts, InnerTube.tabOfParams("EgVwb3N0c_IGBAoCSgA%3D"))
+        assertEquals(ChannelTab.Live, InnerTube.tabOfParams("EgdzdHJlYW1z8gYECgJ6AA=="))
+        assertEquals(ChannelTab.Shows, InnerTube.tabOfParams("EgVzaG93c_IGBAoCYgA="))
+        assertEquals(ChannelTab.Podcasts, InnerTube.tabOfParams("Eghwb2RjYXN0c_IGBQoDugEA"))
+    }
+
+    @Test fun liveShowsPodcasts() {
+        val root = JSONObject("""{"contents":{"twoColumnBrowseResultsRenderer":{"tabs":[
+            {"tabRenderer":{"title":"Live","endpoint":{"browseEndpoint":{"params":"LIVE","canonicalBaseUrl":"/@x/streams"}}}},
+            {"tabRenderer":{"title":"Programmes","endpoint":{"browseEndpoint":{"params":"SHOWS","canonicalBaseUrl":"/@x/shows"}}}},
+            {"tabRenderer":{"title":"Podcasts","endpoint":{"browseEndpoint":{"params":"POD","canonicalBaseUrl":"/channel/UC/podcasts"}}}}
+        ]}}}""")
+        val home = InnerTube.parseChannelHome(root, "UCHnyfMqiRRG1u-2MsSQLbXA")
+        assertEquals(listOf(ChannelTab.Live, ChannelTab.Shows, ChannelTab.Podcasts), home.tabs.keys.toList())
+        assertEquals(ChannelTab.Shows, with(InnerTube) { "/@x/shows".toChannelTab() })
         assertNull(InnerTube.tabOfParams(null))
     }
 }

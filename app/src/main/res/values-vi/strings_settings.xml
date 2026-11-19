@@ -17,7 +17,6 @@
     <string name="settings_speed_remember_off">Mỗi video bắt đầu ở 1×</string>
     <string name="settings_speed_kept_summary">giữ tốc độ %1$s×</string>
     <string name="settings_speed_per_video">tốc độ theo từng video</string>
-    <string name="settings_audio_only_line">Chỉ có âm thanh, không có hình, ở mọi video. Cũng có trên thanh trình phát.</string>
     <string name="settings_sb_summary">Bỏ qua %1$s, hỏi về %2$s</string>
     <string name="settings_mode">Chế độ</string>
     <string name="settings_theme">Chủ đề</string>

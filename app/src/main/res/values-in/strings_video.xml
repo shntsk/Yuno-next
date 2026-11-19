@@ -5,9 +5,6 @@
     <string name="video_bot_check_waiting">YouTube sedang memeriksa koneksi ini. Mencoba lagi…</string>
 
     <!-- Accessibility labels of the round buttons on the video. -->
-    <string name="video_audio_only">Audio saja</string>
-    <!-- Accessibility label of the filled audio-only button shown while audio only is on (tap turns it off). -->
-    <string name="video_audio_only_on">Audio saja aktif</string>
     <string name="video_playback_speed">Kecepatan pemutaran</string>
     <string name="video_captions">Subtitel</string>
     <string name="video_quality">Kualitas</string>

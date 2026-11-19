@@ -6,9 +6,6 @@
     <string name="video_bot_check_waiting">YouTube đang kiểm tra kết nối này. Đang thử lại…</string>
 
     <!-- Accessibility labels of the round buttons on the video. -->
-    <string name="video_audio_only">Chỉ âm thanh</string>
-    <!-- Accessibility label of the filled audio-only button shown while audio only is on (tap turns it off). -->
-    <string name="video_audio_only_on">Đang bật chỉ âm thanh</string>
     <string name="video_playback_speed">Tốc độ phát</string>
     <string name="video_captions">Phụ đề</string>
     <string name="video_quality">Chất lượng</string>

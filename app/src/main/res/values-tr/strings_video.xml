@@ -5,9 +5,6 @@
     <string name="video_bot_check_waiting">YouTube bu bağlantıyı kontrol ediyor. Tekrar deneniyor…</string>
 
     <!-- Accessibility labels of the round buttons on the video. -->
-    <string name="video_audio_only">Yalnızca ses</string>
-    <!-- Accessibility label of the filled audio-only button shown while audio only is on (tap turns it off). -->
-    <string name="video_audio_only_on">Yalnızca ses açık</string>
     <string name="video_playback_speed">Oynatma hızı</string>
     <string name="video_captions">Altyazılar</string>
     <string name="video_quality">Kalite</string>

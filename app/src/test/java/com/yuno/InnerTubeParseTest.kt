@@ -15,6 +15,18 @@ import org.junit.Test
 class InnerTubeParseTest {
     private fun fixture(name: String) = JSONObject(javaClass.classLoader!!.getResource("$name.json")!!.readText())
 
+    @Test fun playlistHeaderFromFlow() {
+        val root = JSONObject(
+            """{"header":{"pageHeaderViewModel":{
+                "metadata":{"contentMetadataViewModel":{"avatarStackViewModel":{"text":{"content":"by Example Channel"}}}},
+                "description":{"descriptionPreviewViewModel":{"description":{"content":"A long description"}}}
+            }}}""",
+        )
+        val header = InnerTube.parsePlaylistHeader(root)
+        assertEquals("Example Channel", header.owner)
+        assertEquals("A long description", header.description)
+    }
+
     @Test fun playlistPage() {
         val page = InnerTube.parseFeed(fixture("playlist"))
         assertTrue("expected ~100 videos, got ${page.videos.size}", page.videos.size >= 90)
@@ -32,6 +44,9 @@ class InnerTubeParseTest {
             "playlist rows should carry channel avatars",
             page.videos.count { it.avatar != null } >= page.videos.size * 0.9,
         )
+        val header = InnerTube.parsePlaylistHeader(fixture("playlist"))
+        assertEquals("Kurzgesagt – In a Nutshell", header.owner)
+        assertEquals("", header.description)
         page.videos.filter { "/ytc/" in it.avatar.orEmpty() }.forEach { v ->
             val edge = Regex("=s(\\d+)").find(v.avatar!!)!!.groupValues[1].toInt()
             assertTrue("ytc avatar must not be over-sharpened: ${v.avatar}", edge <= 96)
@@ -59,6 +74,28 @@ class InnerTubeParseTest {
         assertTrue(out.contains("=s176"))
         val broken = raw.replace("=s6", "=s176")
         assertTrue(sharpenChannelAvatarUrl(broken, 48).contains("=s88"))
+    }
+
+    @Test fun searchPageKeepsMixedOrder() {
+        val page = InnerTube.parseSearch(fixture("search"))
+        assertTrue("search hits", page.hits.isNotEmpty())
+        assertNotNull("search continuation", page.next)
+    }
+
+    /** Flow keeps a Shorts strip as a shelf. Flattening it would turn All into a list of shorts. */
+    @Test fun searchKeepsShortsShelves() {
+        val page = InnerTube.parseSearch(fixture("search"))
+        val shelves = page.hits.filterIsInstance<SearchHit.Shelf>()
+        assertEquals(2, shelves.size)
+        assertTrue(shelves.all { it.kind == SearchShelfKind.SHORTS && it.videos.isNotEmpty() })
+        assertTrue(page.hits.none { it is SearchHit.Video && it.short })
+        assertTrue(page.hits.any { it is SearchHit.Channel })
+        assertTrue(page.hits.any { it is SearchHit.Playlist })
+        val shorts = page.hits.asShortsResults()
+        val shelfIds = shelves.flatMap { it.videos }.map { it.id }.toSet()
+        val shortIds = shorts.map { (it as SearchHit.Video).item.id }.toSet()
+        assertTrue(shortIds.containsAll(shelfIds))
+        assertTrue(shorts.all { it is SearchHit.Video && it.short })
     }
 
     @Test fun searchResults() {

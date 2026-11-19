@@ -6,9 +6,6 @@
     <string name="video_bot_check_waiting">YouTube проверяет это подключение. Повторная попытка…</string>
 
     <!-- Accessibility labels of the round buttons on the video. -->
-    <string name="video_audio_only">Только аудио</string>
-    <!-- Accessibility label of the filled audio-only button shown while audio only is on (tap turns it off). -->
-    <string name="video_audio_only_on">Режим «Только аудио» включён</string>
     <string name="video_playback_speed">Скорость воспроизведения</string>
     <string name="video_captions">Субтитры</string>
     <string name="video_quality">Качество</string>

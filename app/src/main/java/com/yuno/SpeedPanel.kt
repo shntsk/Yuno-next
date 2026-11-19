@@ -81,7 +81,7 @@ import com.yuno.icons.SfIcons
 /**
  * The speed ruler, opened from the video controls' speed pill (VideoView.kt's SpeedSheet):
  * the speed in large type, a ruler dial to flick through 0.5–3× (every 0.05× is a step; it lands
- * on one), "Remember for every video" and a 1× reset. Derek approved option B v2 (speed + audio only).
+ * on one), "Remember for every video" and a 1× reset. Derek approved option B v2.
  */
 @Composable
 internal fun SpeedPanelContent(state: PlayerState) {
