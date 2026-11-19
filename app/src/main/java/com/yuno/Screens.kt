@@ -390,6 +390,10 @@ fun LibraryScreen(
         }
     }
     val listState = rememberLazyListState()
+    val pinnedPlaylists = listOf(
+        PlaylistRef("WL", stringResource(R.string.ui_watch_later), null, null),
+        PlaylistRef("LL", stringResource(R.string.ui_liked_videos), null, null),
+    )
     val libraryList: @Composable () -> Unit = {
         LazyColumn(
             state = rememberScrollToTop(scrollToTop, listState),
@@ -417,11 +421,7 @@ fun LibraryScreen(
             }
             if (signedIn) {
                 item(key = "playlistsTitle") { SectionTitle(stringResource(R.string.ui_playlists)) }
-                val pinned = listOf(
-                    PlaylistRef("WL", stringResource(R.string.ui_watch_later), null, null),
-                    PlaylistRef("LL", stringResource(R.string.ui_liked_videos), null, null),
-                )
-                items((pinned + lib.playlists).chunked(2), key = { row -> row.joinToString { it.id } }) { row ->
+                items((pinnedPlaylists + lib.playlists).chunked(2), key = { row -> row.joinToString { it.id } }) { row ->
                     Row(Modifier.padding(horizontal = PageGutter, vertical = 5.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         row.forEach { pl -> PlaylistTile(pl, Modifier.weight(1f)) { onOpenPlaylist(pl) } }
                         if (row.size == 1) Spacer(Modifier.weight(1f))
