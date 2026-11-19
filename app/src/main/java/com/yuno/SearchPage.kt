@@ -39,6 +39,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.items as gridItems
+import androidx.compose.foundation.lazy.grid.itemsIndexed as gridItemsIndexed
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
@@ -139,7 +140,7 @@ fun SearchScreen(
     // so the page colour is not a slab under the sticky chrome.
     val underBar = topBarHeight() + 8.dp
     val underChips = topBarHeight() + 6.dp + 40.dp + 12.dp
-    val watched = WatchHistory.videos.map { it.id }.toSet()
+    val watched = remember(WatchHistory.videos) { WatchHistory.videos.mapTo(HashSet()) { it.id } }
     val shown = remember(state.hits, state.filter.watchState, watched) {
         state.hits.watchFiltered(state.filter.watchState, watched)
     }
@@ -520,8 +521,7 @@ private fun SearchShorts(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxSize().padding(horizontal = PageGutter),
     ) {
-        gridItems(videos, key = { it.id }) { video ->
-            val index = videos.indexOf(video)
+        gridItemsIndexed(videos, key = { _, video -> video.id }) { index, video ->
             Column(Modifier.pressable(pressedScale = 0.97f) { onOpen(ShortsList(videos, index)) }) {
                 Thumbnail(video.thumbnail, Modifier.fillMaxWidth().aspectRatio(9f / 16f), radius = 16, videoId = video.id, portrait = true)
                 Spacer(Modifier.height(8.dp))

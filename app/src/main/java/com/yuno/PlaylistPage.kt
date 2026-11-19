@@ -198,15 +198,18 @@ private fun androidx.compose.foundation.lazy.LazyListScope.playlistVideos(
         }
         return
     }
-    val rows = videos.chunked(columns)
-    items(rows.size, key = { rows[it].first().id }) { index ->
-        val row = rows[index]
+    val rowCount = (videos.size + columns - 1) / columns
+    items(rowCount, key = { row -> videos[row * columns].id }) { row ->
         Row(Modifier.fillMaxWidth().padding(horizontal = 5.dp)) {
-            row.forEach { video ->
-                val at = videos.indexOf(video)
-                Box(Modifier.weight(1f)) { ChannelFeedVideo(video, palette) { onOpen(at) } }
+            repeat(columns) { column ->
+                val at = row * columns + column
+                val video = videos.getOrNull(at)
+                if (video != null) {
+                    Box(Modifier.weight(1f)) { ChannelFeedVideo(video, palette) { onOpen(at) } }
+                } else {
+                    Spacer(Modifier.weight(1f))
+                }
             }
-            repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
         }
     }
 }

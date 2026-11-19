@@ -394,15 +394,28 @@ fun LazyListScope.videoCards(
         items(videos, key = { it.id }, contentType = { "video" }) { video -> VideoCard(video, onClick = { onOpen(video) }, metaColor = metaColor) }
         return
     }
-    val cells: List<Any> = if (extra != null && videos.isNotEmpty()) videos.take(1) + ExtraCell + videos.drop(1) else videos
-    // A row keeps its first video's key (always a video), so rows already shown stay put as more load.
-    items(cells.chunked(columns), key = { row -> "row-" + (row.first() as VideoItem).id }, contentType = { "row" }) { row ->
+    val hasExtra = extra != null && videos.isNotEmpty()
+    val cellCount = videos.size + if (hasExtra) 1 else 0
+    val rowCount = (cellCount + columns - 1) / columns
+    // Keep only the row being composed; do not copy and chunk the entire feed.
+    items(rowCount, key = { row ->
+        val firstCell = row * columns
+        val firstVideo = if (hasExtra && firstCell > 0) firstCell - 1 else firstCell
+        "row-" + videos[firstVideo].id
+    }, contentType = { "row" }) { row ->
         Row(Modifier.fillMaxWidth().padding(horizontal = 5.dp)) {
-            row.forEach { cell ->
-                if (cell is VideoItem) VideoCard(cell, onClick = { onOpen(cell) }, modifier = Modifier.weight(1f), metaColor = metaColor)
-                else extra?.invoke(Modifier.weight(1f))
+            repeat(columns) { column ->
+                val cell = row * columns + column
+                when {
+                    cell >= cellCount -> Spacer(Modifier.weight(1f))
+                    hasExtra && cell == 1 -> extra?.invoke(Modifier.weight(1f))
+                    else -> {
+                        val videoIndex = if (hasExtra && cell > 1) cell - 1 else cell
+                        val video = videos[videoIndex]
+                        VideoCard(video, onClick = { onOpen(video) }, modifier = Modifier.weight(1f), metaColor = metaColor)
+                    }
+                }
             }
-            repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
         }
     }
 }

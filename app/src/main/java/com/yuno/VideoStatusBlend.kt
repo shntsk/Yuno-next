@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.os.Build
+import android.os.SystemClock
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -37,6 +38,8 @@ internal const val VIDEO_TOP_DEBUG_RAW_STRIP = false
 
 private const val BOX_BLUR_RADIUS = 3
 private const val BOX_BLUR_PASSES = 2
+// The status-bar strip does not need display-rate updates.
+private const val STATUS_SAMPLE_INTERVAL_MS = 125L
 private val ComposeBlurRadius = 12.dp
 
 /**
@@ -51,12 +54,15 @@ object VideoTopSampler {
     var statusBarPx by mutableIntStateOf(0)
     private var running = false
     private var scratch: Bitmap? = null
+    private var lastSampleAtMs = 0L
+    private var luminanceRow = IntArray(0)
     private var posterEpoch = 0
     /** Real frames stay hidden until this video's own first frame, so the last video's strip can't linger. */
     private var acceptLive = true
 
     fun start() {
         running = true
+        lastSampleAtMs = 0L
     }
 
     fun stop() {
@@ -67,6 +73,7 @@ object VideoTopSampler {
     fun holdForPoster() {
         posterEpoch++
         acceptLive = false
+        lastSampleAtMs = 0L
         frame = null
         topLuminance = 0f
     }
@@ -76,7 +83,7 @@ object VideoTopSampler {
     /** The new video has drawn. The next texture update replaces the thumbnail strip immediately. */
     fun releaseLive() {
         acceptLive = true
-        if (running && statusBarPx > 0) tick()
+        if (running && statusBarPx > 0) tick(force = true)
     }
 
     fun showPosterStrip(strip: Bitmap, epoch: Int) {
@@ -87,15 +94,18 @@ object VideoTopSampler {
         publish(strip)
     }
 
-    /** Called on every main-player frame ([android.view.TextureView.onSurfaceTextureUpdated]). */
+    /** Called at display rate, but samples at most eight frames per second. */
     fun onVideoFrame() {
         if (!running || !acceptLive || statusBarPx <= 0) return
         tick()
     }
 
-    private fun tick() {
+    private fun tick(force: Boolean = false) {
         val barPx = statusBarPx
         if (barPx <= 0) return
+        val now = SystemClock.elapsedRealtime()
+        if (!force && now - lastSampleAtMs < STATUS_SAMPLE_INTERVAL_MS) return
+        lastSampleAtMs = now
         val fresh = SharedVideoTexture.captureStatusStrip(barPx) ?: return
         publish(fresh)
     }
@@ -118,7 +128,7 @@ private fun averageLuminance(bitmap: Bitmap): Float {
     val h = bitmap.height
     val n = w * h
     if (n == 0) return 0f
-    val row = IntArray(w)
+    val row = luminanceRow.takeIf { it.size == w } ?: IntArray(w).also { luminanceRow = it }
     var sum = 0f
     for (y in 0 until h) {
         bitmap.getPixels(row, 0, w, 0, y, w, 1)

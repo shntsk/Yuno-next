@@ -766,9 +766,8 @@ private fun ChannelPagerBody(
             beyondViewportPageCount = 1,
         ) { index ->
             val tab = tabs.getOrNull(index) ?: return@HorizontalPager
-            // The page that's on screen loads itself. Settling on it is not the only chance:
-            // the first pass can run before the channel has loaded, and it must not be the last.
-            LaunchedEffect(tab, state.details) { if (state.details != null) state.ensureLoaded(tab) }
+            // Only the settled tab is loaded by ChannelPage. Prefetched pager pages stay cheap
+            // until the user actually opens them.
             when (tab) {
                 ChannelTab.Home -> LazyColumn(Modifier.fillMaxSize(), state = homeList, contentPadding = listPad) {
                     channelScrollHead(headerPx, headerDp, tabsDp)
@@ -861,16 +860,23 @@ private fun ChannelPagerBody(
                         LazyColumn(Modifier.fillMaxSize(), state = shortsList, contentPadding = listPad) {
                             channelScrollHead(headerPx, headerDp, tabsDp)
                             pageGap()
-                            items(feed.videos.chunked(cols), key = { row -> row.first().id }) { row ->
+                            val rowCount = (feed.videos.size + cols - 1) / cols
+                            items(rowCount, key = { row -> feed.videos[row * cols].id }) { row ->
                                 Row(
                                     Modifier.fillMaxWidth().padding(start = PageGutter, end = PageGutter, bottom = 12.dp),
                                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                                 ) {
-                                    row.forEach { s ->
-                                        val at = feed.videos.indexOf(s)
-                                        ShortTile(s, Modifier.weight(1f), palette) { onOpenShorts(state.shortsFrom(at)) }
+                                    repeat(cols) { column ->
+                                        val at = row * cols + column
+                                        val short = feed.videos.getOrNull(at)
+                                        if (short != null) {
+                                            ShortTile(short, Modifier.weight(1f), palette) {
+                                                onOpenShorts(state.shortsFrom(at))
+                                            }
+                                        } else {
+                                            Spacer(Modifier.weight(1f))
+                                        }
                                     }
-                                    repeat(cols - row.size) { Spacer(Modifier.weight(1f)) }
                                 }
                             }
                             feedTail(
@@ -1291,12 +1297,17 @@ private fun LazyListScope.channelVideoItems(
         items(videos, key = { it.id }) { video -> ChannelFeedVideo(video, palette) { onOpen(video) } }
         return
     }
-    items(videos.chunked(columns), key = { row -> row.first().id }) { row ->
+    val rowCount = (videos.size + columns - 1) / columns
+    items(rowCount, key = { row -> videos[row * columns].id }) { row ->
         Row(Modifier.fillMaxWidth().padding(horizontal = 5.dp)) {
-            row.forEach { video ->
-                Box(Modifier.weight(1f)) { ChannelFeedVideo(video, palette) { onOpen(video) } }
+            repeat(columns) { column ->
+                val video = videos.getOrNull(row * columns + column)
+                if (video != null) {
+                    Box(Modifier.weight(1f)) { ChannelFeedVideo(video, palette) { onOpen(video) } }
+                } else {
+                    Spacer(Modifier.weight(1f))
+                }
             }
-            repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
         }
     }
 }
