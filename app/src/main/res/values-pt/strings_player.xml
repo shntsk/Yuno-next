@@ -93,4 +93,5 @@
     <string name="player_not_interested_done">Entendido. Você verá menos vídeos como este</string>
     <string name="player_channel_not_recommended">Este canal não será mais recomendado</string>
     <string name="player_feedback_failed">Não foi possível enviar ao YouTube. Tente de novo</string>
+    <string name="player_live_description_empty">Esta transmissão ao vivo não tem descrição.</string>
 </resources>
