@@ -67,14 +67,20 @@ object DesktopAccount {
             val value = pair.substringAfter('=', "").trim()
             if (name.isNotEmpty() && cookies.put(name, value) != value) changed = true
         }
-        if (changed) DesktopKeyring.put(COOKIE_KEY, cookieHeader())
+        if (changed && isSignedIn() && DesktopKeyring.isAvailable()) {
+            runCatching { DesktopKeyring.put(COOKIE_KEY, cookieHeader()) }
+        }
     }
 
     private fun load() {
         if (loaded) return
         synchronized(this) {
             if (loaded) return
-            DesktopKeyring.get(COOKIE_KEY)?.let { cookies.putAll(parse(it)) }
+            if (DesktopKeyring.isAvailable()) {
+                runCatching { DesktopKeyring.get(COOKIE_KEY) }
+                    .getOrNull()
+                    ?.let { cookies.putAll(parse(it)) }
+            }
             loaded = true
         }
     }
