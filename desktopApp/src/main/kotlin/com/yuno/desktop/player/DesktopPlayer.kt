@@ -17,7 +17,6 @@ object DesktopPlayer {
 
         try {
             ProcessBuilder(command)
-                .redirectInput(ProcessBuilder.Redirect.from(java.io.File(if (System.getProperty("os.name").startsWith("Windows", true)) "NUL" else "/dev/null")))
                 .redirectOutput(ProcessBuilder.Redirect.DISCARD)
                 .redirectError(ProcessBuilder.Redirect.DISCARD)
                 .start()
