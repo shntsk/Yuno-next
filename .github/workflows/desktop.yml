@@ -39,7 +39,18 @@ jobs:
       - name: Install packaging tools
         run: sudo apt-get update && sudo apt-get install -y rpm fakeroot
       - name: Build Linux packages
-        run: gradle :desktopApp:packageDeb :desktopApp:packageRpm --no-daemon --stacktrace
+        run: gradle :desktopApp:createDistributable :desktopApp:packageDeb :desktopApp:packageRpm --no-daemon --stacktrace
+      - name: Create portable Linux archive
+        shell: bash
+        run: |
+          app_dir=$(find desktopApp/build/compose/binaries/main/app -mindepth 1 -maxdepth 1 -type d -name 'Yuno' -print -quit)
+          test -n "$app_dir"
+          tar -czf yuno-linux-x86_64.tar.gz -C "$(dirname "$app_dir")" "$(basename "$app_dir")"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: yuno-linux-portable
+          path: yuno-linux-x86_64.tar.gz
+          if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
           name: yuno-linux-deb
