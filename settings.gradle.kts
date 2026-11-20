@@ -10,9 +10,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // NewPipeExtractor is only published through JitPack.
         maven("https://jitpack.io")
     }
 }
 rootProject.name = "Yuno"
-include(":app")
+include(":app", ":desktopApp")
