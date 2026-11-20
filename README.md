@@ -11,7 +11,7 @@ Yuno is an ad-free YouTube client built with Kotlin and Compose Desktop. This br
 - Optional YouTube session import. Session cookies are stored only in the operating system credential vault:
   - Linux: Secret Service through `secret-tool` (GNOME Keyring, KWallet or another compatible provider).
   - Windows: Windows Credential Manager.
-- Linux `.deb` and `.rpm` packages, plus Windows `.msi` and `.exe` installers from GitHub Actions.
+- Linux `.deb` and `.rpm` packages, a portable Linux `.tar.gz` build, plus Windows `.msi` and `.exe` installers from GitHub Actions.
 
 ## Requirements
 
@@ -27,10 +27,10 @@ Yuno can search and play public videos without signing in. The optional account 
 ./gradlew :desktopApp:run
 ```
 
-Create native packages:
+Create native packages and a portable app image:
 
 ```sh
-./gradlew :desktopApp:packageDeb :desktopApp:packageRpm
+./gradlew :desktopApp:createDistributable :desktopApp:packageDeb :desktopApp:packageRpm
 ```
 
 On Windows, run:
@@ -39,7 +39,7 @@ On Windows, run:
 ./gradlew.bat :desktopApp:packageMsi :desktopApp:packageExe
 ```
 
-CI builds Linux and Windows installers on every push to the `desktop` branch. Download the artifacts from the **Desktop builds** workflow.
+CI builds Linux `.deb`/`.rpm` and portable `.tar.gz` packages, plus Windows `.msi`/`.exe` installers on every push to the `desktop` branch. Download the artifacts from the **Desktop builds** workflow.
 
 ## Playback
 
