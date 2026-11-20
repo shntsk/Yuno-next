@@ -128,8 +128,7 @@ object DesktopYouTube {
     suspend fun details(video: DesktopVideo): DesktopVideoDetails = withContext(Dispatchers.IO) {
         initialize()
         val service = ServiceList.YouTube
-        val link = service.streamLHFactory.fromUrl(watchUrl(video.id))
-        val info = StreamInfo.getInfo(service, link)
+        val info = StreamInfo.getInfo(service, watchUrl(video.id))
         val muxed = info.videoStreams.orEmpty()
             .filter { it.isUrl() && !it.isVideoOnly() }
             .maxByOrNull { it.height }
