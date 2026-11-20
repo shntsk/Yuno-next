@@ -137,7 +137,7 @@ object DesktopYouTube {
             .maxByOrNull { it.height }
         val audio = info.audioStreams.orEmpty()
             .filter { it.isUrl() }
-            .firstOrNull()
+            .maxByOrNull { it.averageBitrate }
 
         val videoUrl = separateVideo?.content ?: muxed?.content
         val audioUrl = if (separateVideo != null) audio?.content else null
