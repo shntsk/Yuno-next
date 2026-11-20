@@ -1,6 +1,7 @@
 package com.yuno.desktop.youtube
 
 import com.yuno.desktop.account.DesktopAccount
+import com.yuno.desktop.model.DesktopVideo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -18,15 +19,6 @@ import org.schabi.newpipe.extractor.stream.StreamInfoItem
 import org.schabi.newpipe.extractor.stream.StreamType
 import java.io.IOException
 import java.util.concurrent.TimeUnit
-
-data class DesktopVideo(
-    val id: String,
-    val title: String,
-    val channel: String,
-    val thumbnail: String?,
-    val durationSeconds: Long,
-    val views: Long,
-)
 
 data class DesktopVideoDetails(
     val video: DesktopVideo,
